@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overlapping peaks and resolution: when two peaks become one</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 27 C10 27 12 4 16 4 S22 27 30 27' fill='none' stroke='%230072B2' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="description" content="Slide two mass spectrometry peaks together and see when they merge into one maximum, how far a single-peak centroid is pulled, and whether a two-peak fit can recover both.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Overlapping peaks and resolution">
+<meta property="og:description" content="Slide two mass spectrometry peaks together and see when they merge into one maximum, how far a single-peak centroid is pulled, and whether a two-peak fit can recover both.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F7F9FB; --surface: #FFFFFF; --ink: #17212B; --ink-2: #4A5866; --ink-3: #6B7884;
+  --rule: #D9E0E6; --accent: #0072B2; --danger: #B3261E; --band: rgba(0, 114, 178, 0.07); --band-2: rgba(213, 94, 0, 0.08);
+  --c-blue: #0072B2; --c-orange: #E69F00; --c-green: #009E73; --c-verm: #D55E00; --c-purple: #CC79A7; --c-sky: #56B4E9;
+  --curve: #9AA6B2; --faint: #C3CCD5;
+  --font: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #12161B; --surface: #1A2027; --ink: #E6EBF0; --ink-2: #A7B2BD; --ink-3: #8794A1;
+    --rule: #2C3540; --accent: #56B4E9; --danger: #F2B8B5; --band: rgba(86, 180, 233, 0.09); --band-2: rgba(230, 159, 0, 0.10);
+    --c-blue: #56B4E9; --curve: #5C6874; --faint: #3A4552;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.55; }
+.page { max-width: 980px; margin: 0 auto; padding: 40px 24px 56px; }
+.crumb { font-size: 14px; margin: 0 0 18px; }
+.crumb a, .pager a { color: var(--accent); text-decoration: none; }
+.crumb a:hover, .pager a:hover { text-decoration: underline; text-underline-offset: 3px; }
+h1 { font-size: 30px; line-height: 1.2; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+.lede { color: var(--ink-2); max-width: 68ch; margin: 0 0 28px; }
+figure { margin: 0 0 20px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 16px 12px; }
+canvas { display: block; width: 100%; }
+figcaption { font-size: 13px; color: var(--ink-3); margin-top: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+.sw { display: inline-block; width: 14px; height: 4px; border-radius: 1px; margin-right: 7px; vertical-align: middle; }
+.sw.dot { width: 8px; height: 8px; border-radius: 50%; }
+.sw.dash { background: none !important; border-top: 2px dashed; height: 0; }
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; align-items: start; margin-top: 28px; }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); gap: 24px; } .page { padding: 28px 16px 40px; } h1 { font-size: 25px; } }
+.ctl { margin: 0 0 18px; }
+.ctl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.ctl label { font-size: 14px; color: var(--ink-2); }
+.ctl output { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hint { font-size: 13px; color: var(--ink-3); margin: 4px 0 0; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+select { font: inherit; font-size: 15px; padding: 6px 8px; color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; width: 100%; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink-2); margin: 0 0 16px; }
+.check input { margin-top: 4px; accent-color: var(--accent); }
+.buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+button { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 4px; cursor: pointer; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); }
+button:hover { filter: brightness(0.96); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.metric { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; }
+.metric .k { font-size: 13px; color: var(--ink-2); }
+.metric .v { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.3; margin-top: 2px; }
+.metric .s { font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.readnote { font-size: 14px; color: var(--ink-2); margin: 14px 0 0; max-width: 62ch; }
+.notes { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+@media (max-width: 760px) { .notes { grid-template-columns: minmax(0, 1fr); } }
+.notes p, .notes li { color: var(--ink-2); font-size: 15px; max-width: 60ch; }
+.notes p { margin: 0 0 12px; }
+.notes ol { margin: 0; padding-left: 20px; }
+.notes li { margin-bottom: 8px; }
+.pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
+.pager .next { margin-left: auto; text-align: right; }
+.pager small { display: block; color: var(--ink-3); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="crumb" aria-label="Breadcrumb"><a href="index.html">All lessons</a></nav>
+  <header>
+    <h1>Overlapping peaks and resolution</h1>
+    <p class="lede">Two ions closer than about one peak width don’t look like two peaks. They look like one slightly wide, slightly lopsided peak, and a peak picker reports one m/z somewhere between them. Move the second peak and watch what the signal, and the software, can and can’t tell you.</p>
+  </header>
+
+  <figure>
+    <canvas id="plot" style="height:320px" role="img" aria-label="Two overlapping Gaussian peaks, their sum, and the fitted results"></canvas>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--c-blue)"></span>Peak A (true)</span>
+      <span><span class="sw" style="background:var(--c-orange)"></span>Peak B (true)</span>
+      <span><span class="sw dot" style="background:var(--ink)"></span>Measured points</span>
+      <span><span class="sw" style="background:var(--c-verm)"></span>Single-peak fit center</span>
+      <span><span class="sw dash" style="border-color:var(--c-purple)"></span>Two-peak fit</span>
+    </div>
+  </figure>
+  <div class="grid">
+    <section aria-labelledby="set-t">
+      <h2 id="set-t">Settings</h2>
+      <div class="ctl"><div class="ctl-head"><label for="sep">Separation, in peak widths (FWHM)</label><output id="sep-out" for="sep"></output></div>
+        <input type="range" id="sep" min="0" max="3" step="0.05" value="0.8">
+        <p class="hint">One FWHM is 25 ppm here, about 40,000 resolving power.</p></div>
+      <div class="ctl"><div class="ctl-head"><label for="ratio">Height of B relative to A</label><output id="ratio-out" for="ratio"></output></div>
+        <input type="range" id="ratio" min="0.05" max="1" step="0.05" value="0.5"></div>
+      <div class="ctl"><div class="ctl-head"><label for="noise">Noise, % of peak A</label><output id="noise-out" for="noise"></output></div>
+        <input type="range" id="noise" min="0" max="10" step="0.5" value="1"></div>
+      <label class="check"><input type="checkbox" id="fit2" checked><span>Fit two peaks of known width</span></label>
+      <div class="buttons"><button type="button" id="redraw">Draw new noise</button></div>
+    </section>
+    <section aria-labelledby="res-t">
+      <h2 id="res-t">What you’re seeing</h2>
+      <div class="metrics">
+        <div class="metric"><div class="k">Maxima in the signal</div><div class="v" id="m-max"></div><div class="s">counted without noise</div></div>
+        <div class="metric"><div class="k">Valley between them</div><div class="v" id="m-val"></div><div class="s">as a share of the smaller peak</div></div>
+        <div class="metric"><div class="k">Apparent width</div><div class="v" id="m-w"></div><div class="s">merged peak’s FWHM vs one peak</div></div>
+        <div class="metric"><div class="k">Single-peak center</div><div class="v" id="m-c"></div><div class="s" id="m-c-s"></div></div>
+        <div class="metric"><div class="k">Two-peak fit error</div><div class="v" id="m-f"></div><div class="s" id="m-f-s"></div></div>
+      </div>
+      <p class="readnote">Two equal peaks show only one maximum when they are closer than 0.85 FWHM. Even one full FWHM apart, the dip between them is only about 7% below the tops.</p>
+    </section>
+  </div>
+
+  <section class="notes" aria-label="Notes">
+
+    <div>
+      <h2>Try this</h2>
+      <ol>
+        <li>With equal heights, slide separation down from 2 to 0.5 FWHM. Note where the second maximum disappears and how the apparent width grows.</li>
+        <li>Set B to 0.2 of A at 0.6 FWHM. The pair looks like one clean peak, but its center is pulled toward B, shifting the reported m/z by several ppm.</li>
+        <li>Watch the two-peak fit at 0.5 FWHM with 1% noise, then 5% noise. Knowing the peak shape can split a pair the eye can’t, until noise makes the answer unstable.</li>
+      </ol>
+    </div>
+    <div>
+      <h2>Key ideas</h2>
+      <p>Resolution is about the dip between peaks, and the dip vanishes earlier than most people expect. A peak that is wider than the instrument should produce at that m/z is a strong hint that it contains more than one ion.</p>
+      <p>A single-peak centroid of an unresolved pair lands near the intensity-weighted mean of the two positions. If their ratio changes from scan to scan or sample to sample, the reported m/z wanders with it.</p>
+      <p>Fitting several peaks of known shape (deconvolution) can separate pairs closer than the resolution, but it needs good signal-to-noise and an accurate peak model.</p>
+    </div>
+
+  </section>
+<nav class="pager" aria-label="Lesson navigation">
+<a class="prev" href="peak_centroid_demo.html"><small>Previous lesson</small>Finding a peak’s center</a>
+<a class="next" href="mass_calibration.html"><small>Next lesson</small>Mass calibration</a>
+</nav>
+</div>
+<script>
+
+"use strict";
+const $ = id => document.getElementById(id);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeRng(seed){const r=mulberry32(seed);let spare=null;return{u:r,n(){if(spare!==null){const s=spare;spare=null;return s;}let u=0;while(!u)u=r();const v=r(),m=Math.sqrt(-2*Math.log(u));spare=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);},p(l){if(!(l>0))return 0;if(l<30){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=r();}while(p>L);return k-1;}return Math.max(0,Math.round(l+Math.sqrt(l)*this.n()));}};}
+function newSeed(){return (Math.random()*4294967296)>>>0;}
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function minus(s){return String(s).replace(/^-/,"\u2212");}
+function fmt(v,d){if(!isFinite(v))return "n/a";const s=v.toFixed(d);return (+s===0)?Math.abs(0).toFixed(d):minus(s);}
+function sgn(v,d){if(!isFinite(v))return "n/a";const s=Math.abs(v).toFixed(d);if(+s===0)return s;return (v>0?"+":"\u2212")+s;}
+function sig2(v){if(!(v>0))return v;const p=Math.pow(10,Math.floor(Math.log10(v))-1);return Math.round(v/p)*p;}
+function fmtInt(v){return isFinite(v)?minus(Math.round(v).toLocaleString("en-US")):"n/a";}
+function gauss(x,s){return Math.exp(-(x*x)/(2*s*s));}
+function erfc(x){const z=Math.abs(x),t=1/(1+0.5*z),r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));return x>=0?r:2-r;}
+function normTail(k){return 0.5*erfc(k/Math.SQRT2);}
+function normCdf(z){return 0.5*erfc(-z/Math.SQRT2);}
+function gammaSample(rng,shape){if(shape<1){const u=rng.u()||1e-12;return gammaSample(rng,shape+1)*Math.pow(u,1/shape);}const d=shape-1/3,cc=1/Math.sqrt(9*d);for(;;){let x,v;do{x=rng.n();v=1+cc*x;}while(v<=0);v=v*v*v;const u=rng.u();if(u<1-0.0331*x*x*x*x)return d*v;if(Math.log(u)<0.5*x*x+d*(1-v+Math.log(v)))return d*v;}}
+function pulseSum(rng,k,cv){if(k<=0)return 0;if(!(cv>0))return k;return gammaSample(rng,k/(cv*cv))*cv*cv;}
+function rollExt(y,h,isMin){const n=y.length,out=new Float64Array(n),dq=new Int32Array(n);let hd=0,tl=0,j=0;for(let i=0;i<n;i++){const hi=Math.min(n-1,i+h);while(j<=hi){while(tl>hd&&(isMin?y[dq[tl-1]]>=y[j]:y[dq[tl-1]]<=y[j]))tl--;dq[tl++]=j;j++;}while(dq[hd]<i-h)hd++;out[i]=y[dq[hd]];}return out;}
+function movingAvg(y,h){const n=y.length,ps=new Float64Array(n+1),out=new Float64Array(n);for(let i=0;i<n;i++)ps[i+1]=ps[i]+y[i];for(let i=0;i<n;i++){const a=Math.max(0,i-h),b=Math.min(n-1,i+h);out[i]=(ps[b+1]-ps[a])/(b-a+1);}return out;}
+function median(a){const b=Float64Array.from(a).sort();const n=b.length;if(!n)return NaN;return n%2?b[(n-1)/2]:(b[n/2-1]+b[n/2])/2;}
+function sd(a){let n=a.length,m=0,s=0;if(n<2)return NaN;for(const v of a)m+=v;m/=n;for(const v of a)s+=(v-m)*(v-m);return Math.sqrt(s/(n-1));}
+function solve(A,b){const n=b.length,M=A.map((r,i)=>r.slice().concat([b[i]]));for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;if(Math.abs(M[p][c])<1e-14)return null;const t=M[c];M[c]=M[p];M[p]=t;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/M[c][c];for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/r[i]);}
+function convolve(y,k){const n=y.length,m=(k.length-1)/2,out=new Float64Array(n);for(let i=0;i<n;i++){let s=0;for(let j=-m;j<=m;j++){let q=i+j;if(q<0)q=0;else if(q>=n)q=n-1;s+=k[j+m]*y[q];}out[i]=s;}return out;}
+function gaussKernel(sig){const m=Math.max(1,Math.ceil(3*sig)),k=[];let s=0;for(let j=-m;j<=m;j++){const v=Math.exp(-j*j/(2*sig*sig));k.push(v);s+=v;}return k.map(v=>v/s);}
+function halfMaxWidth(xs,ys,i){const h=ys[i]/2;let l=i,r=i;while(l>0&&ys[l]>h)l--;while(r<ys.length-1&&ys[r]>h)r++;if(ys[l]>h||ys[r]>h)return NaN;const xl=xs[l]+(h-ys[l])*(xs[l+1]-xs[l])/(ys[l+1]-ys[l]);const xr=xs[r-1]+(h-ys[r-1])*(xs[r]-xs[r-1])/(ys[r]-ys[r-1]);return xr-xl;}
+function interp3(xs,ys,i){if(i<=0||i>=ys.length-1)return xs[i];const y0=ys[i-1],y1=ys[i],y2=ys[i+1],step=xs[i+1]-xs[i];let d;if(y0>0&&y1>0&&y2>0){const a=Math.log(y0),b=Math.log(y1),c=Math.log(y2),den=a-2*b+c;d=den<0?0.5*(a-c)/den:0;}else{const den=y0-2*y1+y2;d=den<0?0.5*(y0-y2)/den:0;}return xs[i]+Math.max(-1,Math.min(1,d))*step;}
+function argmaxIn(xs,ys,lo,hi){let b=-1,v=-Infinity;for(let i=0;i<xs.length;i++){if(xs[i]<lo||xs[i]>hi)continue;if(ys[i]>v){v=ys[i];b=i;}}return b;}
+function canvasCtx(cv){const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);c.font="12px "+cssv("--font");return{c,W,H};}
+function niceStep(span,n){const raw=span/(n||5),p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p;return(m<1.5?1:m<3.5?2:m<7.5?5:10)*p;}
+function tickLabel(v,step){if(Math.abs(v)<step*1e-6)return "0";const d=Math.max(0,-Math.floor(Math.log10(step)+1e-9));return minus(v.toFixed(d));}
+function plotFrame(g,o){
+  const L=o.l??54,R=o.r??14,T=o.t??14,B=o.b??42,W=g.W,H=g.H,c=g.c;
+  const tx=v=>o.xlog?Math.log10(v):v,ty=v=>o.ylog?Math.log10(v):v;
+  const X=v=>L+(tx(v)-tx(o.x0))/(tx(o.x1)-tx(o.x0))*(W-L-R);
+  const Y=v=>T+(ty(o.y1)-ty(v))/(ty(o.y1)-ty(o.y0))*(H-T-B);
+  const ink3=cssv("--ink-3"),rule=cssv("--rule");
+  c.lineWidth=1;c.fillStyle=ink3;
+  const ticks=(a,b,log,n,f)=>{const out=[];if(log){for(let d=Math.floor(Math.log10(a));d<=Math.ceil(Math.log10(b));d++)for(const m of[1,2,5]){const v=m*Math.pow(10,d);if(v>=a*(1-1e-9)&&v<=b*(1+1e-9))out.push([v,v>=1?fmtInt(v):String(+v.toPrecision(1))]);}return out;}const st=niceStep(b-a,n);for(let v=Math.ceil(a/st-1e-9)*st;v<=b+st*1e-9;v+=st)out.push([v,f?f(v,st):tickLabel(v,st)]);return out;};
+  if(o.yticks!==false){c.textAlign="right";c.textBaseline="middle";for(const[v,lab]of ticks(o.y0,o.y1,o.ylog,o.ny||5,o.yfmt)){const y=Y(v);c.strokeStyle=rule;c.beginPath();c.moveTo(L,Math.round(y)+0.5);c.lineTo(W-R,Math.round(y)+0.5);c.stroke();c.fillText(lab,L-6,y);}}
+  c.strokeStyle=ink3;c.beginPath();c.moveTo(L,H-B+0.5);c.lineTo(W-R,H-B+0.5);c.stroke();
+  c.textAlign="center";c.textBaseline="alphabetic";
+  for(const[v,lab]of (o.xticks?o.xticks(W):ticks(o.x0,o.x1,o.xlog,o.nx||6,o.xfmt))){const x=X(v);c.beginPath();c.moveTo(x,H-B);c.lineTo(x,H-B+5);c.stroke();const tw=c.measureText(lab).width;const lx=Math.min(Math.max(x,tw/2+2),W-tw/2-2);c.fillText(lab,lx,H-B+18);}
+  if(o.xlabel){c.fillText(o.xlabel,(L+W-R)/2,H-5);}
+  if(o.ylabel){c.save();c.translate(13,(T+H-B)/2);c.rotate(-Math.PI/2);c.textAlign="center";c.fillText(o.ylabel,0,0);c.restore();}
+  return{X,Y,L,R,T,B,W,H,c,x0:o.x0,x1:o.x1,y0:o.y0,y1:o.y1};
+}
+function clipOn(P){P.c.save();P.c.beginPath();P.c.rect(P.L,P.T-2,P.W-P.L-P.R,P.H-P.T-P.B+2);P.c.clip();}
+function clipOff(P){P.c.restore();}
+function pline(P,xs,ys,col,w,dash,alpha){const c=P.c;c.save();c.strokeStyle=col;c.lineWidth=w||1.5;if(dash)c.setLineDash(dash);if(alpha!=null)c.globalAlpha=alpha;c.beginPath();let on=false;for(let i=0;i<xs.length;i++){const y=ys[i];if(!isFinite(y)){on=false;continue;}const a=P.X(xs[i]),b=P.Y(y);if(!on){c.moveTo(a,b);on=true;}else c.lineTo(a,b);}c.stroke();c.restore();}
+function pdots(P,xs,ys,col,r,hollow){const c=P.c;c.save();c.fillStyle=col;c.strokeStyle=col;c.lineWidth=1.5;for(let i=0;i<xs.length;i++){if(!isFinite(ys[i]))continue;c.beginPath();c.arc(P.X(xs[i]),P.Y(ys[i]),r||3,0,2*Math.PI);hollow?c.stroke():c.fill();}c.restore();}
+function pvline(P,x,col,w,dash,alpha,ytop,ybot){const c=P.c;c.save();c.strokeStyle=col;c.lineWidth=w||1;if(dash)c.setLineDash(dash);if(alpha!=null)c.globalAlpha=alpha;const X=P.X(x);c.beginPath();c.moveTo(X,ytop!=null?P.Y(ytop):P.T);c.lineTo(X,ybot!=null?P.Y(ybot):P.H-P.B);c.stroke();c.restore();}
+function phline(P,y,col,w,dash,alpha){const c=P.c;c.save();c.strokeStyle=col;c.lineWidth=w||1;if(dash)c.setLineDash(dash);if(alpha!=null)c.globalAlpha=alpha;const Y=P.Y(y);c.beginPath();c.moveTo(P.L,Y);c.lineTo(P.W-P.R,Y);c.stroke();c.restore();}
+function pband(P,xa,xb,fill){const c=P.c;c.save();c.fillStyle=fill;const a=P.X(xa),b=P.X(xb);c.fillRect(Math.min(a,b),P.T,Math.abs(b-a),P.H-P.T-P.B);c.restore();}
+function plabel(P,x,y,text,col,align){const c=P.c;c.save();c.fillStyle=col||cssv("--ink-3");c.textAlign=align||"left";c.textBaseline="alphabetic";c.fillText(text,x,y);c.restore();}
+function bindRange(id,show){const el=$(id),out=$(id+"-out");const upd=()=>{if(out)out.textContent=show(+el.value);};upd();el.addEventListener("input",upd);return el;}
+function onChange(ids,fn){ids.forEach(id=>{const el=$(id);el.addEventListener(el.tagName==="SELECT"||el.type==="checkbox"?"change":"input",fn);});}
+function whenThemeOrResize(fn){window.addEventListener("resize",fn);if(window.matchMedia){const mq=window.matchMedia("(prefers-color-scheme: dark)");if(mq.addEventListener)mq.addEventListener("change",fn);}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fn);}
+
+(function () {
+
+  let seed = newSeed();
+  bindRange("sep", v => fmt(v, 2));
+  bindRange("ratio", v => fmt(v, 2));
+  bindRange("noise", v => fmt(v, 1) + "%");
+  const cv = $("plot"), F = 25, S = F / 2.3548, step = F / 8;
+
+  function lm(xs, ys, p, f, J) {
+    let lam = 1e-3, cur = p.slice();
+    const ss = q => xs.reduce((a, x, i) => a + (ys[i] - f(x, q)) ** 2, 0);
+    let s0 = ss(cur);
+    for (let it = 0; it < 200; it++) {
+      const n = cur.length, A = Array.from({ length: n }, () => new Array(n).fill(0)), g = new Array(n).fill(0);
+      xs.forEach((x, i) => { const r = ys[i] - f(x, cur), j = J(x, cur); for (let a = 0; a < n; a++) { g[a] += j[a] * r; for (let b = 0; b < n; b++) A[a][b] += j[a] * j[b]; } });
+      let improved = false;
+      for (let t = 0; t < 10; t++) {
+        const M = A.map((row, a) => row.map((v, b) => a === b ? v * (1 + lam) : v)), d = solve(M, g);
+        if (!d) { lam *= 10; continue; }
+        const q = cur.map((v, a) => v + d[a]), s1 = ss(q);
+        if (s1 < s0) { const rel = (s0 - s1) / (s0 || 1); cur = q; s0 = s1; lam = Math.max(lam / 3, 1e-9); improved = true; if (rel < 1e-10) return cur; break; }
+        lam *= 4;
+      }
+      if (!improved) break;
+    }
+    return cur;
+  }
+  const g1 = (x, p) => p[0] * gauss(x - p[1], p[2]);
+  const j1 = (x, p) => { const e = gauss(x - p[1], p[2]), d = x - p[1]; return [e, p[0] * e * d / (p[2] * p[2]), p[0] * e * d * d / (p[2] ** 3)]; };
+  const g2 = (x, p) => p[0] * gauss(x - p[1], S) + p[2] * gauss(x - p[3], S);
+  const j2 = (x, p) => { const e1 = gauss(x - p[1], S), e2 = gauss(x - p[3], S); return [e1, p[0] * e1 * (x - p[1]) / (S * S), e2, p[2] * e2 * (x - p[3]) / (S * S)]; };
+
+  function render() {
+    const sep = +$("sep").value, r = +$("ratio").value, nz = +$("noise").value / 100, d = sep * F;
+    const x0 = -3 * F, x1 = d + 3 * F;
+    const xs = []; for (let x = x0; x <= x1 + 1e-9; x += step) xs.push(x);
+    const rng = makeRng(seed);
+    const truth = x => gauss(x, S) + r * gauss(x - d, S);
+    const ys = xs.map(x => truth(x) + nz * rng.n());
+    const fx = [], fy = []; for (let x = x0; x <= x1; x += 0.25) { fx.push(x); fy.push(truth(x)); }
+    const maxima = []; for (let i = 1; i < fy.length - 1; i++) if (fy[i] > fy[i - 1] && fy[i] >= fy[i + 1]) maxima.push(i);
+    const gi = fy.indexOf(Math.max(...fy));
+    const widthRatio = halfMaxWidth(fx, fy, gi) / F;
+    const im = ys.indexOf(Math.max(...ys));
+    const p1 = lm(xs, ys, [ys[im], xs[im], S], g1, j1);
+    let p2 = null;
+    if ($("fit2").checked) {
+      const extra = Math.sqrt(Math.max(0, p1[2] * p1[2] - S * S)), del = Math.max(0.5 * S, extra);
+      p2 = lm(xs, ys, [p1[0] / 1.5, p1[1] - del, p1[0] / 3, p1[1] + del], g2, j2);
+      if (!p2.every(isFinite) || p2[0] <= 0 || p2[2] <= 0) p2 = "fail";
+    }
+
+    const g = canvasCtx(cv);
+    const ymax = Math.max(Math.max(...ys), Math.max(...fy)) * 1.15;
+    const P = plotFrame(g, { x0, x1, y0: Math.min(0, Math.min(...ys)) - 0.03, y1: ymax, xlabel: "ppm from peak A", ylabel: "Intensity" });
+    clipOn(P);
+    pline(P, fx, fx.map(x => gauss(x, S)), cssv("--c-blue"), 1.5, null, 0.9);
+    pline(P, fx, fx.map(x => r * gauss(x - d, S)), cssv("--c-orange"), 1.5, null, 0.9);
+    pline(P, fx, fy, cssv("--curve"), 1.5);
+    if (p2 && p2 !== "fail") {
+      pline(P, fx, fx.map(x => p2[0] * gauss(x - p2[1], S)), cssv("--c-purple"), 1.8, [6, 4]);
+      pline(P, fx, fx.map(x => p2[2] * gauss(x - p2[3], S)), cssv("--c-purple"), 1.8, [6, 4]);
+    }
+    pvline(P, p1[1], cssv("--c-verm"), 2.5, null, 1, ymax * 0.97, 0);
+    pdots(P, xs, ys, cssv("--ink"), 3.2);
+    clipOff(P);
+
+    $("m-max").textContent = String(Math.min(maxima.length, 2));
+    if (maxima.length >= 2) {
+      const a = maxima[0], b = maxima[maxima.length - 1]; let v = Infinity; for (let i = a; i <= b; i++) v = Math.min(v, fy[i]);
+      $("m-val").textContent = fmt(100 * v / Math.min(fy[a], fy[b]), 0) + "%";
+    } else $("m-val").textContent = "No valley";
+    $("m-w").textContent = "×" + fmt(widthRatio, 2);
+    $("m-c").textContent = sgn(p1[1], 1) + " ppm";
+    $("m-c-s").textContent = "from peak A; weighted mean of the pair: " + sgn(r * d / (1 + r), 1) + " ppm";
+    if (!p2) { $("m-f").textContent = "Off"; $("m-f-s").textContent = "turn on the two-peak fit"; }
+    else if (p2 === "fail") { $("m-f").textContent = "Failed"; $("m-f-s").textContent = "the fit did not converge"; }
+    else {
+      const pos = [p2[1], p2[3]].sort((a, b) => a - b);
+      $("m-f").textContent = "A " + sgn(pos[0], 1) + ", B " + sgn(pos[1] - d, 1);
+      $("m-f-s").textContent = "ppm error of each fitted position";
+    }
+  }
+  onChange(["sep", "ratio", "noise", "fit2"], render);
+  $("redraw").addEventListener("click", () => { seed = newSeed(); render(); });
+  whenThemeOrResize(render);
+  render();
+
+})();
+</script>
+</body>
+</html>

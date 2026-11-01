@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Finding a peak’s center: five centroid estimators compared</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 27 C10 27 12 4 16 4 S22 27 30 27' fill='none' stroke='%230072B2' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="description" content="Compare five ways to estimate a peak’s m/z from sampled points under different sampling and noise. An interactive lesson on mass spectrometry signal processing.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Finding a peak’s center">
+<meta property="og:description" content="Compare five ways to estimate a peak’s m/z from sampled points under different sampling and noise. An interactive lesson on mass spectrometry signal processing.">
+<meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -44,6 +50,9 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.55; }
 .page { max-width: 980px; margin: 0 auto; padding: 40px 24px 56px; }
+.crumb { font-size: 14px; margin: 0 0 18px; }
+.crumb a { color: var(--accent); text-decoration: none; }
+.crumb a:hover { text-decoration: underline; text-underline-offset: 3px; }
 h1 { font-size: 30px; line-height: 1.2; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
 h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
 .lede { color: var(--ink-2); max-width: 68ch; margin: 0 0 28px; }
@@ -83,10 +92,16 @@ dt { font-weight: 500; margin-top: 12px; }
 dt:first-child { margin-top: 0; }
 dd { margin: 2px 0 0; color: var(--ink-2); font-size: 15px; }
 .notes p { color: var(--ink-2); font-size: 15px; margin: 0 0 12px; max-width: 60ch; }
+.pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
+.pager a { color: var(--accent); text-decoration: none; }
+.pager a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.pager .next { margin-left: auto; text-align: right; }
+.pager small { display: block; color: var(--ink-3); font-size: 13px; }
 </style>
 </head>
 <body>
 <div class="page">
+  <nav class="crumb" aria-label="Breadcrumb"><a href="index.html">All lessons</a></nav>
   <header>
     <h1>Finding a peak’s center</h1>
     <p class="lede">A Gaussian peak is sampled at discrete points and noise is added. Five estimators each report where they think the center is, and the error is shown in ppm. Change the sampling and noise to see which estimator holds up.</p>
@@ -150,9 +165,13 @@ dd { margin: 2px 0 0; color: var(--ink-2); font-size: 15px; }
       <h2>Reading the results</h2>
       <p>RMS is the typical size of the error over 2,000 trials, each with a random sub-sample offset and fresh noise. Bias is the average error; a value near zero means the estimator does not lean in one direction.</p>
       <p>With only 2–3 points per FWHM, methods that assume a peak shape do best. With 8 or more points and real noise, the three-point methods lose ground, because three points near the top carry little information, and methods that use many points win.</p>
-      <p>No estimator can beat the counting limit: a peak built from N ions has a center uncertain by roughly σ/√N, where σ = FWHM / 2.355.</p>
+      <p>No estimator can beat the counting limit: a peak built from N ions has a center uncertain by roughly σ/√N, where σ = FWHM / 2.355. That assumes an ideal ion-counting detector; with an analog detector whose pulse heights vary, N behaves like a smaller effective number of ions.</p>
     </div>
   </section>
+<nav class="pager" aria-label="Lesson navigation">
+<a class="prev" href="detecting_peaks.html"><small>Previous lesson</small>Detecting peaks</a>
+<a class="next" href="overlapping_peaks.html"><small>Next lesson</small>Overlapping peaks and resolution</a>
+</nav>
 </div>
 
 <script>

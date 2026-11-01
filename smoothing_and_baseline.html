@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smoothing and baseline removal: what filters keep, what they cost, and what they mistake for baseline</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 27 C10 27 12 4 16 4 S22 27 30 27' fill='none' stroke='%230072B2' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="description" content="A low-resolution axial time-of-flight spectrum with sparse peaks, a crowd of unresolved low-mass peaks and a baseline that lifts at high m/z. Compare smoothing filters and rolling-minimum and SNIP baselines against the known truth.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Smoothing and baseline removal">
+<meta property="og:description" content="A low-resolution axial time-of-flight spectrum with sparse peaks, a crowd of unresolved low-mass peaks and a baseline that lifts at high m/z. Compare smoothing filters and rolling-minimum and SNIP baselines against the known truth.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F7F9FB; --surface: #FFFFFF; --ink: #17212B; --ink-2: #4A5866; --ink-3: #6B7884;
+  --rule: #D9E0E6; --accent: #0072B2; --danger: #B3261E; --band: rgba(0, 114, 178, 0.07); --band-2: rgba(213, 94, 0, 0.08);
+  --c-blue: #0072B2; --c-orange: #E69F00; --c-green: #009E73; --c-verm: #D55E00; --c-purple: #CC79A7; --c-sky: #56B4E9;
+  --curve: #9AA6B2; --faint: #C3CCD5;
+  --font: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #12161B; --surface: #1A2027; --ink: #E6EBF0; --ink-2: #A7B2BD; --ink-3: #8794A1;
+    --rule: #2C3540; --accent: #56B4E9; --danger: #F2B8B5; --band: rgba(86, 180, 233, 0.09); --band-2: rgba(230, 159, 0, 0.10);
+    --c-blue: #56B4E9; --curve: #5C6874; --faint: #3A4552;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.55; }
+.page { max-width: 980px; margin: 0 auto; padding: 40px 24px 56px; }
+.crumb { font-size: 14px; margin: 0 0 18px; }
+.crumb a, .pager a { color: var(--accent); text-decoration: none; }
+.crumb a:hover, .pager a:hover { text-decoration: underline; text-underline-offset: 3px; }
+h1 { font-size: 30px; line-height: 1.2; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+.lede { color: var(--ink-2); max-width: 68ch; margin: 0 0 28px; }
+figure { margin: 0 0 20px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 16px 12px; }
+canvas { display: block; width: 100%; }
+figcaption { font-size: 13px; color: var(--ink-3); margin-top: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+.sw { display: inline-block; width: 14px; height: 4px; border-radius: 1px; margin-right: 7px; vertical-align: middle; }
+.sw.dot { width: 8px; height: 8px; border-radius: 50%; }
+.sw.dash { background: none !important; border-top: 2px dashed; height: 0; }
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; align-items: start; margin-top: 28px; }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); gap: 24px; } .page { padding: 28px 16px 40px; } h1 { font-size: 25px; } }
+.ctl { margin: 0 0 18px; }
+.ctl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.ctl label { font-size: 14px; color: var(--ink-2); }
+.ctl output { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hint { font-size: 13px; color: var(--ink-3); margin: 4px 0 0; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+select { font: inherit; font-size: 15px; padding: 6px 8px; color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; width: 100%; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink-2); margin: 0 0 16px; }
+.check input { margin-top: 4px; accent-color: var(--accent); }
+.buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+button { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 4px; cursor: pointer; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); }
+button:hover { filter: brightness(0.96); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.metric { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; }
+.metric .k { font-size: 13px; color: var(--ink-2); }
+.metric .v { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.3; margin-top: 2px; }
+.metric .s { font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.readnote { font-size: 14px; color: var(--ink-2); margin: 14px 0 0; max-width: 62ch; }
+.notes { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+@media (max-width: 760px) { .notes { grid-template-columns: minmax(0, 1fr); } }
+.notes p, .notes li { color: var(--ink-2); font-size: 15px; max-width: 60ch; }
+.notes p { margin: 0 0 12px; }
+.notes ol { margin: 0; padding-left: 20px; }
+.notes li { margin-bottom: 8px; }
+.pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
+.pager .next { margin-left: auto; text-align: right; }
+.pager small { display: block; color: var(--ink-3); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="crumb" aria-label="Breadcrumb"><a href="index.html">All lessons</a></nav>
+  <header>
+    <h1>Smoothing and baseline removal</h1>
+    <p class="lede">Random noise changes from point to point, faster than any real peak. A baseline changes slowly, over many peak widths. Smoothing and baseline removal both rely on that difference in scale. This low-resolution, axial time-of-flight spectrum adds a complication: at low mass, a crowd of peaks too close to resolve forms a raised floor that a baseline method can’t tell apart from a real offset.</p>
+  </header>
+
+  <figure>
+    <canvas id="plot" style="height:300px" role="img" aria-label="Whole spectrum with the smoothed signal and the estimated and true baselines"></canvas>
+    <canvas id="plot3" style="height:220px;margin-top:10px" role="img" aria-label="Close-up of an isolated peak and a close pair"></canvas>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--curve)"></span>Raw signal</span>
+      <span><span class="sw" style="background:var(--c-blue)"></span>Smoothed</span>
+      <span><span class="sw" style="background:var(--c-orange)"></span>Estimated baseline</span>
+      <span><span class="sw dash" style="border-color:var(--ink-3)"></span>True baseline</span>
+      <span><span class="sw" style="background:var(--band-2);height:10px;border:1px solid var(--rule)"></span>Crowd of unresolved peaks</span>
+    </div>
+    <figcaption>Top: the whole spectrum. Bottom: close-up of an isolated peak and a close pair, with the true signal dashed. Sampled evenly in flight time, as the detector records it, so peaks get wider toward high m/z.</figcaption>
+  </figure>
+  <figure>
+    <canvas id="plot2" style="height:220px" role="img" aria-label="Smoothed signal after baseline subtraction compared with the true peaks"></canvas>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--c-blue)"></span>Smoothed minus estimated baseline</span>
+      <span><span class="sw dash" style="border-color:var(--ink-3)"></span>True peaks, including the unresolved crowd</span>
+    </div>
+  </figure>
+  <div class="grid">
+    <section aria-labelledby="set-t">
+      <h2 id="set-t">The spectrum</h2>
+      <div class="ctl"><div class="ctl-head"><label for="noise">Noise level</label><output id="noise-out" for="noise"></output></div>
+        <input type="range" id="noise" min="0" max="15" step="0.5" value="2"></div>
+      <div class="ctl"><div class="ctl-head"><label for="crowd">Unresolved low-mass peaks</label><output id="crowd-out" for="crowd"></output></div>
+        <input type="range" id="crowd" min="0" max="2" step="0.1" value="1"></div>
+      <div class="ctl"><div class="ctl-head"><label for="lift">Baseline lift at high m/z</label><output id="lift-out" for="lift"></output></div>
+        <input type="range" id="lift" min="0" max="50" step="1" value="25"></div>
+      <h2 style="margin-top:24px">The processing</h2>
+      <div class="ctl"><div class="ctl-head"><label for="sm">Smoothing</label></div>
+        <select id="sm"><option value="none">None</option><option value="ma">Moving average</option><option value="sg" selected>Savitzky–Golay (quadratic)</option><option value="ga">Gaussian</option></select></div>
+      <div class="ctl"><div class="ctl-head"><label for="sw">Smoothing window, in peak widths</label><output id="sw-out" for="sw"></output></div>
+        <input type="range" id="sw" min="0.25" max="3" step="0.05" value="0.75"></div>
+      <div class="ctl"><div class="ctl-head"><label for="bl">Baseline</label></div>
+        <select id="bl"><option value="none">None</option><option value="min">Rolling minimum</option><option value="snip" selected>SNIP</option></select></div>
+      <div class="ctl"><div class="ctl-head"><label for="bw">Baseline window, in peak widths</label><output id="bw-out" for="bw"></output></div>
+        <input type="range" id="bw" min="-0.3" max="2.5" step="0.02" value="1.2">
+        <p class="hint">Windows are measured in peak widths at m/z 6,000. On a flight-time axis, low-mass peaks are narrower, so the same window spans more of them.</p></div>
+      <div class="buttons"><button type="button" id="redraw">Draw new noise</button></div>
+    </section>
+    <section aria-labelledby="res-t">
+      <h2 id="res-t">What you’re seeing</h2>
+      <div class="metrics">
+        <div class="metric"><div class="k">Noise left after smoothing</div><div class="v" id="m-n"></div><div class="s" id="m-n-s"></div></div>
+        <div class="metric"><div class="k">Isolated peak height kept</div><div class="v" id="m-h"></div><div class="s">peak at m/z 4,500, after smoothing and baseline removal, without noise</div></div>
+        <div class="metric"><div class="k">Isolated peak width</div><div class="v" id="m-w"></div><div class="s">change from the true width, without noise</div></div>
+        <div class="metric"><div class="k">Close pair near m/z 5,600</div><div class="v" id="m-d"></div><div class="s" id="m-d-s"></div></div>
+        <div class="metric"><div class="k">Baseline error at high mass</div><div class="v" id="m-b"></div><div class="s">RMS difference from the true baseline, m/z 6,500–10,000, without noise</div></div>
+        <div class="metric"><div class="k">Unresolved crowd removed as baseline</div><div class="v" id="m-c"></div><div class="s">share of its signal subtracted, m/z 1,900–3,400, without noise</div></div>
+        <div class="metric"><div class="k">Baseline pulled down by noise</div><div class="v" id="m-nb"></div><div class="s">average shift of the estimate caused by noise, m/z 3,700–6,000</div></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="notes" aria-label="Notes">
+
+    <div>
+      <h2>Try this</h2>
+      <ol>
+        <li>With SNIP and a 16-width window, check “Unresolved crowd removed as baseline”: most of the crowd is subtracted as if it were baseline, though it is real signal. Set noise to 0 to see it clearly at the low-mass end of the lower plot.</li>
+        <li>Widen the baseline window as far as it goes. SNIP keeps treating most of the crowd as baseline at every width, because a smooth hump falling away from the low-mass edge has no peak shape for it to clip. Rolling minimum lets go of some of it only at around 300 peak widths, by which point its error at high mass has grown. No window separates the crowd from a true baseline.</li>
+        <li>Shrink the baseline window below one peak width. The baseline climbs into the real peaks and takes their height.</li>
+        <li>With moving average, widen the smoothing window past one peak width. Noise drops, but the isolated peak loses height and the close pair merges. Savitzky–Golay keeps more of the height.</li>
+        <li>Raise the noise and watch “Baseline pulled down by noise.” Minimum-based methods follow the lowest points, so noise drags the whole estimate below the true baseline.</li>
+      </ol>
+    </div>
+    <div>
+      <h2>Key ideas</h2>
+      <p>Every smoothing filter is a trade: it averages away noise narrower than its window and also flattens anything else that narrow, including the tops of peaks and the dip between close peaks. Savitzky–Golay fits a small polynomial at each point, so it follows peak curvature better than a plain average.</p>
+      <p>A baseline method only sees shape. SNIP removes features that are peaked and keeps anything that changes smoothly, so a crowd of peaks too close to resolve, being broad and smooth, looks like baseline and gets removed with it. Whether that is acceptable depends on the question; the real fix is more resolving power, which turns the crowd back into separate peaks.</p>
+      <p>A true baseline, an offset not made of resolvable ions, varies slowly. In axial time-of-flight instruments with sparse signal it tends to lift first at high m/z, so the baseline window must be narrow enough to follow that rise and wide enough to pass under real peaks.</p>
+      <h2 style="margin-top:20px">Assumptions in this simulation</h2>
+      <p>A linear (axial) TOF at resolving power 600, sampled every 4 ns over flight times of about 22–52 µs. Peaks are Gaussian in flight time and noise is Gaussian. The shape of the high-mass lift is illustrative, a smooth rise, not a model of a particular mechanism, and the unresolved crowd stands for any dense set of small peaks.</p>
+    </div>
+
+  </section>
+<nav class="pager" aria-label="Lesson navigation">
+<a class="prev" href="what_noise_looks_like.html"><small>Previous lesson</small>What noise looks like</a>
+<a class="next" href="detecting_peaks.html"><small>Next lesson</small>Detecting peaks</a>
+</nav>
+</div>
+<script>
+
+"use strict";
+const $ = id => document.getElementById(id);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeRng(seed){const r=mulberry32(seed);let spare=null;return{u:r,n(){if(spare!==null){const s=spare;spare=null;return s;}let u=0;while(!u)u=r();const v=r(),m=Math.sqrt(-2*Math.log(u));spare=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);},p(l){if(!(l>0))return 0;if(l<30){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=r();}while(p>L);return k-1;}return Math.max(0,Math.round(l+Math.sqrt(l)*this.n()));}};}
+function newSeed(){return (Math.random()*4294967296)>>>0;}
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function minus(s){return String(s).replace(/^-/,"\u2212");}
+function fmt(v,d){if(!isFinite(v))return "n/a";const s=v.toFixed(d);return (+s===0)?Math.abs(0).toFixed(d):minus(s);}
+function sgn(v,d){if(!isFinite(v))return "n/a";const s=Math.abs(v).toFixed(d);if(+s===0)return s;return (v>0?"+":"\u2212")+s;}
+function sig2(v){if(!(v>0))return v;const p=Math.pow(10,Math.floor(Math.log10(v))-1);return Math.round(v/p)*p;}
+function fmtInt(v){return isFinite(v)?minus(Math.round(v).toLocaleString("en-US")):"n/a";}
+function gauss(x,s){return Math.exp(-(x*x)/(2*s*s));}
+function erfc(x){const z=Math.abs(x),t=1/(1+0.5*z),r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));return x>=0?r:2-r;}
+function normTail(k){return 0.5*erfc(k/Math.SQRT2);}
+function normCdf(z){return 0.5*erfc(-z/Math.SQRT2);}
+function gammaSample(rng,shape){if(shape<1){const u=rng.u()||1e-12;return gammaSample(rng,shape+1)*Math.pow(u,1/shape);}const d=shape-1/3,cc=1/Math.sqrt(9*d);for(;;){let x,v;do{x=rng.n();v=1+cc*x;}while(v<=0);v=v*v*v;const u=rng.u();if(u<1-0.0331*x*x*x*x)return d*v;if(Math.log(u)<0.5*x*x+d*(1-v+Math.log(v)))return d*v;}}
+function pulseSum(rng,k,cv){if(k<=0)return 0;if(!(cv>0))return k;return gammaSample(rng,k/(cv*cv))*cv*cv;}
+function rollExt(y,h,isMin){const n=y.length,out=new Float64Array(n),dq=new Int32Array(n);let hd=0,tl=0,j=0;for(let i=0;i<n;i++){const hi=Math.min(n-1,i+h);while(j<=hi){while(tl>hd&&(isMin?y[dq[tl-1]]>=y[j]:y[dq[tl-1]]<=y[j]))tl--;dq[tl++]=j;j++;}while(dq[hd]<i-h)hd++;out[i]=y[dq[hd]];}return out;}
+function movingAvg(y,h){const n=y.length,ps=new Float64Array(n+1),out=new Float64Array(n);for(let i=0;i<n;i++)ps[i+1]=ps[i]+y[i];for(let i=0;i<n;i++){const a=Math.max(0,i-h),b=Math.min(n-1,i+h);out[i]=(ps[b+1]-ps[a])/(b-a+1);}return out;}
+function median(a){const b=Float64Array.from(a).sort();const n=b.length;if(!n)return NaN;return n%2?b[(n-1)/2]:(b[n/2-1]+b[n/2])/2;}
+function sd(a){let n=a.length,m=0,s=0;if(n<2)return NaN;for(const v of a)m+=v;m/=n;for(const v of a)s+=(v-m)*(v-m);return Math.sqrt(s/(n-1));}
+function solve(A,b){const n=b.length,M=A.map((r,i)=>r.slice().concat([b[i]]));for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;if(Math.abs(M[p][c])<1e-14)return null;const t=M[c];M[c]=M[p];M[p]=t;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/M[c][c];for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/r[i]);}
+function convolve(y,k){const n=y.length,m=(k.length-1)/2,out=new Float64Array(n);for(let i=0;i<n;i++){let s=0;for(let j=-m;j<=m;j++){let q=i+j;if(q<0)q=0;else if(q>=n)q=n-1;s+=k[j+m]*y[q];}out[i]=s;}return out;}
+function gaussKernel(sig){const m=Math.max(1,Math.ceil(3*sig)),k=[];let s=0;for(let j=-m;j<=m;j++){const v=Math.exp(-j*j/(2*sig*sig));k.push(v);s+=v;}return k.map(v=>v/s);}
+function halfMaxWidth(xs,ys,i){const h=ys[i]/2;let l=i,r=i;while(l>0&&ys[l]>h)l--;while(r<ys.length-1&&ys[r]>h)r++;if(ys[l]>h||ys[r]>h)return NaN;const xl=xs[l]+(h-ys[l])*(xs[l+1]-xs[l])/(ys[l+1]-ys[l]);const xr=xs[r-1]+(h-ys[r-1])*(xs[r]-xs[r-1])/(ys[r]-ys[r-1]);return xr-xl;}
+function interp3(xs,ys,i){if(i<=0||i>=ys.length-1)return xs[i];const y0=ys[i-1],y1=ys[i],y2=ys[i+1],step=xs[i+1]-xs[i];let d;if(y0>0&&y1>0&&y2>0){const a=Math.log(y0),b=Math.log(y1),c=Math.log(y2),den=a-2*b+c;d=den<0?0.5*(a-c)/den:0;}else{const den=y0-2*y1+y2;d=den<0?0.5*(y0-y2)/den:0;}return xs[i]+Math.max(-1,Math.min(1,d))*step;}
+function argmaxIn(xs,ys,lo,hi){let b=-1,v=-Infinity;for(let i=0;i<xs.length;i++){if(xs[i]<lo||xs[i]>hi)continue;if(ys[i]>v){v=ys[i];b=i;}}return b;}
+function canvasCtx(cv){const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);c.font="12px "+cssv("--font");return{c,W,H};}
+function niceStep(span,n){const raw=span/(n||5),p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p;return(m<1.5?1:m<3.5?2:m<7.5?5:10)*p;}
+function tickLabel(v,step){if(Math.abs(v)<step*1e-6)return "0";const d=Math.max(0,-Math.floor(Math.log10(step)+1e-9));return minus(v.toFixed(d));}
+function plotFrame(g,o){
+  const L=o.l??54,R=o.r??14,T=o.t??14,B=o.b??42,W=g.W,H=g.H,c=g.c;
+  const tx=v=>o.xlog?Math.log10(v):v,ty=v=>o.ylog?Math.log10(v):v;
+  const X=v=>L+(tx(v)-tx(o.x0))/(tx(o.x1)-tx(o.x0))*(W-L-R);
+  const Y=v=>T+(ty(o.y1)-ty(v))/(ty(o.y1)-ty(o.y0))*(H-T-B);
+  const ink3=cssv("--ink-3"),rule=cssv("--rule");
+  c.lineWidth=1;c.fillStyle=ink3;
+  const ticks=(a,b,log,n,f)=>{const out=[];if(log){for(let d=Math.floor(Math.log10(a));d<=Math.ceil(Math.log10(b));d++)for(const m of[1,2,5]){const v=m*Math.pow(10,d);if(v>=a*(1-1e-9)&&v<=b*(1+1e-9))out.push([v,v>=1?fmtInt(v):String(+v.toPrecision(1))]);}return out;}const st=niceStep(b-a,n);for(let v=Math.ceil(a/st-1e-9)*st;v<=b+st*1e-9;v+=st)out.push([v,f?f(v,st):tickLabel(v,st)]);return out;};
+  if(o.yticks!==false){c.textAlign="right";c.textBaseline="middle";for(const[v,lab]of ticks(o.y0,o.y1,o.ylog,o.ny||5,o.yfmt)){const y=Y(v);c.strokeStyle=rule;c.beginPath();c.moveTo(L,Math.round(y)+0.5);c.lineTo(W-R,Math.round(y)+0.5);c.stroke();c.fillText(lab,L-6,y);}}
+  c.strokeStyle=ink3;c.beginPath();c.moveTo(L,H-B+0.5);c.lineTo(W-R,H-B+0.5);c.stroke();
+  c.textAlign="center";c.textBaseline="alphabetic";
+  for(const[v,lab]of (o.xticks?o.xticks(W):ticks(o.x0,o.x1,o.xlog,o.nx||6,o.xfmt))){const x=X(v);c.beginPath();c.moveTo(x,H-B);c.lineTo(x,H-B+5);c.stroke();const tw=c.measureText(lab).width;const lx=Math.min(Math.max(x,tw/2+2),W-tw/2-2);c.fillText(lab,lx,H-B+18);}
+  if(o.xlabel){c.fillText(o.xlabel,(L+W-R)/2,H-5);}
+  if(o.ylabel){c.save();c.translate(13,(T+H-B)/2);c.rotate(-Math.PI/2);c.textAlign="center";c.fillText(o.ylabel,0,0);c.restore();}
+  return{X,Y,L,R,T,B,W,H,c,x0:o.x0,x1:o.x1,y0:o.y0,y1:o.y1};
+}
+function clipOn(P){P.c.save();P.c.beginPath();P.c.rect(P.L,P.T-2,P.W-P.L-P.R,P.H-P.T-P.B+2);P.c.clip();}
+function clipOff(P){P.c.restore();}
+function pline(P,xs,ys,col,w,dash,alpha){const c=P.c;c.save();c.strokeStyle=col;c.lineWidth=w||1.5;if(dash)c.setLineDash(dash);if(alpha!=null)c.globalAlpha=alpha;c.beginPath();let on=false;for(let i=0;i<xs.length;i++){const y=ys[i];if(!isFinite(y)){on=false;continue;}const a=P.X(xs[i]),b=P.Y(y);if(!on){c.moveTo(a,b);on=true;}else c.lineTo(a,b);}c.stroke();c.restore();}
+function pdots(P,xs,ys,col,r,hollow){const c=P.c;c.save();c.fillStyle=col;c.strokeStyle=col;c.lineWidth=1.5;for(let i=0;i<xs.length;i++){if(!isFinite(ys[i]))continue;c.beginPath();c.arc(P.X(xs[i]),P.Y(ys[i]),r||3,0,2*Math.PI);hollow?c.stroke():c.fill();}c.restore();}
+function pvline(P,x,col,w,dash,alpha,ytop,ybot){const c=P.c;c.save();c.strokeStyle=col;c.lineWidth=w||1;if(dash)c.setLineDash(dash);if(alpha!=null)c.globalAlpha=alpha;const X=P.X(x);c.beginPath();c.moveTo(X,ytop!=null?P.Y(ytop):P.T);c.lineTo(X,ybot!=null?P.Y(ybot):P.H-P.B);c.stroke();c.restore();}
+function phline(P,y,col,w,dash,alpha){const c=P.c;c.save();c.strokeStyle=col;c.lineWidth=w||1;if(dash)c.setLineDash(dash);if(alpha!=null)c.globalAlpha=alpha;const Y=P.Y(y);c.beginPath();c.moveTo(P.L,Y);c.lineTo(P.W-P.R,Y);c.stroke();c.restore();}
+function pband(P,xa,xb,fill){const c=P.c;c.save();c.fillStyle=fill;const a=P.X(xa),b=P.X(xb);c.fillRect(Math.min(a,b),P.T,Math.abs(b-a),P.H-P.T-P.B);c.restore();}
+function plabel(P,x,y,text,col,align){const c=P.c;c.save();c.fillStyle=col||cssv("--ink-3");c.textAlign=align||"left";c.textBaseline="alphabetic";c.fillText(text,x,y);c.restore();}
+function bindRange(id,show){const el=$(id),out=$(id+"-out");const upd=()=>{if(out)out.textContent=show(+el.value);};upd();el.addEventListener("input",upd);return el;}
+function onChange(ids,fn){ids.forEach(id=>{const el=$(id);el.addEventListener(el.tagName==="SELECT"||el.type==="checkbox"?"change":"input",fn);});}
+function whenThemeOrResize(fn){window.addEventListener("resize",fn);if(window.matchMedia){const mq=window.matchMedia("(prefers-color-scheme: dark)");if(mq.addEventListener)mq.addEventListener("change",fn);}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fn);}
+
+(function () {
+
+  let seed = newSeed();
+  bindRange("noise", v => fmt(v, 1));
+  bindRange("crowd", v => fmt(v, 1) + "×");
+  bindRange("lift", v => String(v));
+  bindRange("sw", v => fmt(v, 2) + "×");
+  bindRange("bw", v => { const w = Math.pow(10, v); return (w < 10 ? fmt(w, 1) : fmtInt(w)) + "×"; });
+  const cv = $("plot"), cv2 = $("plot2"), cv3 = $("plot3");
+  const K = 0.51, RP = 600, DT = 0.004, mLo = 1900, mHi = 10200;
+  const tOf = m => K * Math.sqrt(m), mOf = t => (t / K) ** 2;
+  const t0 = tOf(mLo), t1 = tOf(mHi), n = Math.round((t1 - t0) / DT) + 1;
+  const ts = Array.from({ length: n }, (_, i) => t0 + i * DT), ms = ts.map(mOf);
+  const sigT = t => t / (2 * RP) / 2.3548;
+  const refW = tOf(6000) / (2 * RP) / DT;
+  const fw = m => m / RP;
+  function addPeak(arr, m, h) { const tc = tOf(m), s = sigT(tc); const i0 = Math.max(0, Math.floor((tc - 5 * s - t0) / DT)), i1 = Math.min(n - 1, Math.ceil((tc + 5 * s - t0) / DT)); for (let i = i0; i <= i1; i++) arr[i] += h * gauss(ts[i] - tc, s); }
+  const pairM = 5600 + 1.2 * fw(5600);
+  const truePk = new Float64Array(n);
+  [[4500, 100], [5600, 70], [pairM, 50], [7000, 40], [8800, 60], [9400, 20]].forEach(([m, h]) => addPeak(truePk, m, h));
+  const crowd1 = new Float64Array(n);
+  (() => { const r = makeRng(77); let m = 1700; while (m < 3300) { addPeak(crowd1, m, 7 * Math.exp(-(m - 1700) / 600) * (0.3 + 0.7 * r.u())); m += 0.3 + 0.7 * r.u(); } })();
+  const lift1 = ms.map(m => 1 / (1 + Math.exp(-(m - 7600) / 700)));
+  const idxM = (a, b) => { const out = []; for (let i = 0; i < n; i++) if (ms[i] >= a && ms[i] <= b) out.push(i); return out; };
+  const quiet = idxM(3700, 4200), hiReg = idxM(6500, 10000), crowdReg = idxM(1900, 3400), flatReg = idxM(3700, 6000);
+  const odd = v => { let w = Math.max(3, Math.round(v)); return w % 2 ? w : w + 1; };
+  const mTicks = (lo, hi) => W => { const span = hi - lo, st = niceStep(span, W < 600 ? 4 : 8), out = []; for (let m = Math.ceil(lo / st) * st; m <= hi; m += st) out.push([tOf(m), fmtInt(m)]); return out; };
+
+  function smoothWith(y, kind, widthF) {
+    const wp = widthF * refW, w = odd(wp), m = (w - 1) / 2;
+    if (kind === "none") return Float64Array.from(y);
+    if (kind === "ma") return movingAvg(y, m);
+    if (kind === "sg") { const den = (2 * m - 1) * (2 * m + 1) * (2 * m + 3), k = []; for (let i = -m; i <= m; i++) k.push((3 * (3 * m * m + 3 * m - 1) - 15 * i * i) / den); return convolve(y, k); }
+    return convolve(y, gaussKernel(wp / 2.3548));
+  }
+  function baselineOf(y, kind, widthF) {
+    const w = odd(widthF * refW), h = (w - 1) / 2, N = y.length;
+    if (kind === "none") return new Float64Array(N);
+    if (kind === "min") return movingAvg(rollExt(rollExt(y, h, true), h, false), h);
+    let z = Float64Array.from(y), nz = new Float64Array(N);
+    for (let k = 1; k <= h; k++) { for (let i = 0; i < N; i++) nz[i] = (i >= k && i < N - k) ? Math.min(z[i], (z[i - k] + z[i + k]) / 2) : z[i]; const t = z; z = nz; nz = t; }
+    return z;
+  }
+
+  function render() {
+    const sn = +$("noise").value, cw = +$("crowd").value, lift = +$("lift").value;
+    const kind = $("sm").value, wF = +$("sw").value, bk = $("bl").value, bF = Math.pow(10, +$("bw").value);
+    const trueBl = lift1.map(v => 3 + lift * v);
+    const truth = Array.from(truePk, (v, i) => v + cw * crowd1[i]);
+    const rng = makeRng(seed);
+    const raw = truth.map((v, i) => v + trueBl[i] + sn * rng.n());
+    const sm = smoothWith(raw, kind, wF), bl = baselineOf(sm, bk, bF);
+    const corr = Array.from(sm, (v, i) => v - bl[i]);
+    const cleanFull = smoothWith(truth.map((v, i) => v + trueBl[i]), kind, wF), clBl = baselineOf(cleanFull, bk, bF);
+    const cleanCorr = Array.from(cleanFull, (v, i) => v - clBl[i] - (truth[i] - truePk[i]));
+
+    const g = canvasCtx(cv);
+    const ymax = Math.max(...raw) * 1.05, ymin = Math.min(0, Math.min(...raw));
+    const P = plotFrame(g, { x0: t0, x1: t1, y0: ymin, y1: ymax, xlabel: "m/z", ylabel: "Intensity", xticks: mTicks(mLo, mHi) });
+    pband(P, tOf(1900), tOf(3400), cssv("--band-2"));
+    clipOn(P);
+    pline(P, ts, raw, cssv("--curve"), 1);
+    pline(P, ts, trueBl, cssv("--ink-3"), 1.2, [5, 5]);
+    pline(P, ts, sm, cssv("--c-blue"), 1.3);
+    if (bk !== "none") pline(P, ts, Array.from(bl), cssv("--c-orange"), 2);
+    clipOff(P);
+
+    const za = 4300, zb = 5800, zi = idxM(za, zb);
+    const g3 = canvasCtx(cv3);
+    const zmax = Math.max(...zi.map(i => raw[i])) * 1.08, zmin = Math.min(0, ...zi.map(i => raw[i]));
+    const P3 = plotFrame(g3, { x0: tOf(za), x1: tOf(zb), y0: zmin, y1: zmax, xlabel: "m/z (close-up)", ylabel: "Intensity", xticks: mTicks(za, zb) });
+    clipOn(P3);
+    const zt = zi.map(i => ts[i]);
+    pline(P3, zt, zi.map(i => raw[i]), cssv("--curve"), 1);
+    pline(P3, zt, zi.map(i => truth[i] + trueBl[i]), cssv("--ink-3"), 1.2, [5, 5]);
+    pline(P3, zt, zi.map(i => sm[i]), cssv("--c-blue"), 1.8);
+    if (bk !== "none") pline(P3, zt, zi.map(i => bl[i]), cssv("--c-orange"), 2);
+    clipOff(P3);
+
+    const g2 = canvasCtx(cv2);
+    const y2max = Math.max(Math.max(...corr), 100) * 1.08, y2min = Math.min(-10, Math.min(...corr) * 1.1);
+    const P2 = plotFrame(g2, { x0: t0, x1: t1, y0: y2min, y1: y2max, xlabel: "m/z", ylabel: "Intensity", xticks: mTicks(mLo, mHi) });
+    pband(P2, tOf(1900), tOf(3400), cssv("--band-2"));
+    clipOn(P2);
+    pline(P2, ts, truth, cssv("--ink-3"), 1.2, [5, 5]);
+    pline(P2, ts, corr, cssv("--c-blue"), 1.3);
+    clipOff(P2);
+
+    const resid = quiet.map(i => sm[i] - truth[i] - trueBl[i]), rawRes = quiet.map(i => raw[i] - truth[i] - trueBl[i]);
+    const nsd = sd(resid), rsd = sd(rawRes);
+    $("m-n").textContent = sn > 0 ? fmt(100 * nsd / rsd, 0) + "%" : "n/a";
+    $("m-n-s").textContent = sn > 0 ? "of the raw noise (" + fmt(rsd, 1) + " → " + fmt(nsd, 1) + ")" : "no noise added";
+    const cl = cleanCorr, ip = argmaxIn(ms, cl, 4480, 4520);
+    $("m-h").textContent = fmt(cl[ip], 0) + "%";
+    const wT = halfMaxWidth(ts, cl, ip), wTrue = tOf(4500) / (2 * RP);
+    $("m-w").textContent = sgn(100 * (wT / wTrue - 1), 0) + "%";
+    const pr = idxM(5590, pairM + 10), seg = pr.map(i => cl[i]);
+    const loc = []; for (let j = 1; j < seg.length - 1; j++) if (seg[j] > seg[j - 1] && seg[j] >= seg[j + 1]) loc.push(j);
+    if (loc.length >= 2) {
+      const a = loc[0], b = loc[loc.length - 1]; let v = Infinity; for (let j = a; j <= b; j++) v = Math.min(v, seg[j]);
+      $("m-d").textContent = "Resolved"; $("m-d-s").textContent = "valley at " + fmt(100 * v / Math.min(seg[a], seg[b]), 0) + "% of the smaller peak, without noise";
+    } else { $("m-d").textContent = "Merged"; $("m-d-s").textContent = "the two peaks now form one maximum"; }
+    if (bk === "none") { $("m-b").textContent = "n/a"; $("m-c").textContent = "n/a"; $("m-nb").textContent = "n/a"; }
+    else {
+      $("m-b").textContent = fmt(Math.sqrt(hiReg.reduce((a, i) => a + (clBl[i] - trueBl[i]) ** 2, 0) / hiReg.length), 1);
+      const crowdArea = crowdReg.reduce((a, i) => a + cw * crowd1[i], 0);
+      const taken = crowdReg.reduce((a, i) => a + Math.min(Math.max(clBl[i] - trueBl[i], 0), cw * crowd1[i]), 0);
+      $("m-c").textContent = crowdArea > 1e-6 ? fmt(100 * taken / crowdArea, 0) + "%" : "n/a";
+      $("m-nb").textContent = sgn(flatReg.reduce((a, i) => a + bl[i] - clBl[i], 0) / flatReg.length, 1);
+    }
+  }
+  onChange(["noise", "crowd", "lift", "sm", "sw", "bl", "bw"], render);
+  $("redraw").addEventListener("click", () => { seed = newSeed(); render(); });
+  whenThemeOrResize(render);
+  render();
+
+})();
+</script>
+</body>
+</html>
