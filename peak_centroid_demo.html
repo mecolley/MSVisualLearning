@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finding a peak’s center: five centroid estimators compared</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F7F9FB;
+  --surface: #FFFFFF;
+  --ink: #17212B;
+  --ink-2: #4A5866;
+  --ink-3: #6B7884;
+  --rule: #D9E0E6;
+  --accent: #0072B2;
+  --danger: #B3261E;
+  --m-apex: #D55E00;
+  --m-com: #CC79A7;
+  --m-par: #E69F00;
+  --m-g3: #009E73;
+  --m-fit: #0072B2;
+  --curve: #9AA6B2;
+  --font: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #12161B;
+    --surface: #1A2027;
+    --ink: #E6EBF0;
+    --ink-2: #A7B2BD;
+    --ink-3: #8794A1;
+    --rule: #2C3540;
+    --accent: #56B4E9;
+    --danger: #F2B8B5;
+    --m-fit: #56B4E9;
+    --curve: #5C6874;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.55; }
+.page { max-width: 980px; margin: 0 auto; padding: 40px 24px 56px; }
+h1 { font-size: 30px; line-height: 1.2; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+.lede { color: var(--ink-2); max-width: 68ch; margin: 0 0 28px; }
+figure { margin: 0 0 28px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 16px 10px; }
+canvas { display: block; width: 100%; height: 320px; }
+figcaption { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; align-items: start; }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); gap: 24px; } .page { padding: 28px 16px 40px; } h1 { font-size: 25px; } }
+.ctl { margin: 0 0 18px; }
+.ctl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.ctl label { font-size: 14px; color: var(--ink-2); }
+.ctl output { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.hint { font-size: 13px; color: var(--ink-3); margin: 4px 0 0; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input[type=number] { width: 96px; font: inherit; font-size: 15px; padding: 6px 8px; color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; }
+input[type=number][aria-invalid=true] { border-color: var(--danger); }
+.err { font-size: 13px; color: var(--danger); margin: 4px 0 0; }
+.err:empty { display: none; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink-2); margin: 0 0 20px; }
+.check input { margin-top: 4px; accent-color: var(--accent); }
+.buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+button { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 4px; cursor: pointer; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+button:hover { filter: brightness(0.96); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th { text-align: right; font-weight: 500; color: var(--ink-2); padding: 0 0 8px 8px; border-bottom: 1px solid var(--rule); font-size: 13px; }
+th:first-child { text-align: left; padding-left: 0; }
+td { padding: 9px 0 9px 8px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+td:first-child { text-align: left; padding-left: 0; white-space: normal; }
+.sw { display: inline-block; width: 14px; height: 4px; border-radius: 1px; margin-right: 10px; vertical-align: middle; }
+.status { font-size: 13px; color: var(--ink-3); margin: 10px 0 0; }
+.notes { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+@media (max-width: 760px) { .notes { grid-template-columns: minmax(0, 1fr); } }
+dl { margin: 0; }
+dt { font-weight: 500; margin-top: 12px; }
+dt:first-child { margin-top: 0; }
+dd { margin: 2px 0 0; color: var(--ink-2); font-size: 15px; }
+.notes p { color: var(--ink-2); font-size: 15px; margin: 0 0 12px; max-width: 60ch; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Finding a peak’s center</h1>
+    <p class="lede">A Gaussian peak is sampled at discrete points and noise is added. Five estimators each report where they think the center is, and the error is shown in ppm. Change the sampling and noise to see which estimator holds up.</p>
+  </header>
+
+  <figure>
+    <canvas id="plot" role="img" aria-label="Sampled peak with the true center and each estimator’s result marked"></canvas>
+    <figcaption>Dots are the sampled points; the gray curve is the true peak; the dashed line is the true center. Colored lines mark each estimator’s answer.</figcaption>
+  </figure>
+
+  <div class="grid">
+    <section aria-labelledby="ctl-title">
+      <h2 id="ctl-title">Settings</h2>
+      <div class="ctl">
+        <div class="ctl-head"><label for="pts">Points per FWHM</label><output id="pts-out" for="pts">4</output></div>
+        <input type="range" id="pts" min="2" max="12" step="1" value="4">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="noise">Noise, % of peak height</label><output id="noise-out" for="noise">3%</output></div>
+        <input type="range" id="noise" min="0" max="20" step="1" value="3">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="offset">True center offset</label><output id="offset-out" for="offset">0.30</output></div>
+        <input type="range" id="offset" min="-0.5" max="0.5" step="0.05" value="0.3">
+        <p class="hint">Where the true center falls between two sampled points, in sampling steps.</p>
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="fwhm">Peak FWHM, ppm</label><input type="number" id="fwhm" min="1" max="500" step="1" value="25" aria-describedby="fwhm-err"></div>
+        <p class="err" id="fwhm-err" role="alert"></p>
+        <p class="hint">25 ppm is about 40,000 resolving power. Errors scale with this width.</p>
+      </div>
+      <label class="check"><input type="checkbox" id="clip"><span>Clip negative intensities to zero, as a digitizer threshold does</span></label>
+      <div class="buttons">
+        <button type="button" id="redraw">Draw new noise</button>
+        <button type="button" id="run" class="primary">Run 2,000 trials</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="res-title">
+      <h2 id="res-title">Errors, ppm</h2>
+      <table>
+        <thead><tr><th scope="col">Estimator</th><th scope="col">This draw</th><th scope="col">RMS, trials</th><th scope="col">Bias, trials</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="status" id="status" aria-live="polite">Run the trials to see typical error over random offsets and noise.</p>
+    </section>
+  </div>
+
+  <section class="notes" aria-label="About the estimators">
+    <div>
+      <h2>The estimators</h2>
+      <dl>
+        <dt>Apex sample</dt><dd>The m/z of the highest sampled point. Error is spread evenly over half a sampling step either side.</dd>
+        <dt>Center of mass</dt><dd>Intensity-weighted mean of the points above half the maximum. Averages noise, but shifts as points enter or leave the window.</dd>
+        <dt>Parabola, 3 points</dt><dd>A parabola through the apex and its two neighbors. Cheap, with a small bias because a Gaussian is not a parabola.</dd>
+        <dt>Gaussian, 3 points</dt><dd>The same parabola fitted to log intensities. Exact for a noise-free Gaussian; fails when a neighbor is zero.</dd>
+        <dt>Gaussian least-squares fit</dt><dd>Height, center and width fitted to all points within 1.5 FWHM. Uses the most information, but needs a starting guess and can fail on noisy data.</dd>
+      </dl>
+    </div>
+    <div>
+      <h2>Reading the results</h2>
+      <p>RMS is the typical size of the error over 2,000 trials, each with a random sub-sample offset and fresh noise. Bias is the average error; a value near zero means the estimator does not lean in one direction.</p>
+      <p>With only 2–3 points per FWHM, methods that assume a peak shape do best. With 8 or more points and real noise, the three-point methods lose ground, because three points near the top carry little information, and methods that use many points win.</p>
+      <p>No estimator can beat the counting limit: a peak built from N ions has a center uncertain by roughly σ/√N, where σ = FWHM / 2.355.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var KEYS = ["apex", "com", "par", "g3", "fit"];
+  var NAMES = { apex: "Apex sample", com: "Center of mass", par: "Parabola, 3 points", g3: "Gaussian, 3 points", fit: "Gaussian least-squares fit" };
+  var N_TRIALS = 2000, N_NOISE = 200;
+
+  var el = function (id) { return document.getElementById(id); };
+  var pts = el("pts"), noise = el("noise"), offset = el("offset"), fwhm = el("fwhm"), clip = el("clip");
+  var canvas = el("plot"), rows = el("rows"), status = el("status"), fwhmErr = el("fwhm-err");
+
+  var fwhmPpm = 25, Z = makeNoise(), trialResults = null;
+
+  function randn() {
+    var u = 0;
+    while (!u) u = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
+  }
+  function makeNoise() { var z = new Array(N_NOISE); for (var i = 0; i < N_NOISE; i++) z[i] = randn(); return z; }
+
+  function simulate(P, mu, nz, z, doClip) {
+    var s = P / 2.3548, K = Math.ceil(3 * P), xs = [], ys = [];
+    for (var k = -K; k <= K; k++) {
+      var y = Math.exp(-((k - mu) * (k - mu)) / (2 * s * s)) + nz * z[k + K];
+      xs.push(k);
+      ys.push(doClip ? Math.max(0, y) : y);
+    }
+    return { xs: xs, ys: ys };
+  }
+
+  function solve3(M, b) {
+    var m = M.map(function (r, i) { return r.concat([b[i]]); });
+    for (var c = 0; c < 3; c++) {
+      var p = c;
+      for (var r = c + 1; r < 3; r++) if (Math.abs(m[r][c]) > Math.abs(m[p][c])) p = r;
+      if (Math.abs(m[p][c]) < 1e-12) return null;
+      var tmp = m[c]; m[c] = m[p]; m[p] = tmp;
+      for (r = 0; r < 3; r++) {
+        if (r === c) continue;
+        var f = m[r][c] / m[c][c];
+        for (var k = c; k < 4; k++) m[r][k] -= f * m[c][k];
+      }
+    }
+    return [m[0][3] / m[0][0], m[1][3] / m[1][1], m[2][3] / m[2][2]];
+  }
+
+  function gaussFit(xs, ys, a, P, mu0, A0) {
+    var w = Math.max(2, Math.round(1.5 * P));
+    var lo = Math.max(0, a - w), hi = Math.min(ys.length - 1, a + w);
+    var A = A0, mu = mu0, s = P / 2.3548;
+    for (var it = 0; it < 40; it++) {
+      var M = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], g = [0, 0, 0];
+      for (var i = lo; i <= hi; i++) {
+        var x = xs[i], e = Math.exp(-((x - mu) * (x - mu)) / (2 * s * s)), f = A * e, res = ys[i] - f;
+        var J = [e, f * (x - mu) / (s * s), f * (x - mu) * (x - mu) / (s * s * s)];
+        for (var p = 0; p < 3; p++) { g[p] += J[p] * res; for (var q = 0; q < 3; q++) M[p][q] += J[p] * J[q]; }
+      }
+      var d = solve3(M, g);
+      if (!d) return NaN;
+      A += d[0]; mu += d[1]; s += d[2];
+      if (!(s > 0.1) || !isFinite(mu) || Math.abs(mu - xs[a]) > Math.max(2, P / 2)) return NaN;
+      if (Math.abs(d[1]) < 1e-7) break;
+    }
+    return mu;
+  }
+
+  function estimate(xs, ys, P) {
+    var n = ys.length, a = -1, best = -Infinity;
+    for (var i = 0; i < n; i++) if (Math.abs(xs[i]) <= P && ys[i] > best) { best = ys[i]; a = i; }
+    var r = { apex: xs[a] };
+
+    var l = a, h = a;
+    while (l > 0 && ys[l - 1] >= 0.5 * best) l--;
+    while (h < n - 1 && ys[h + 1] >= 0.5 * best) h++;
+    var sw = 0, sx = 0;
+    for (i = l; i <= h; i++) { sw += ys[i]; sx += ys[i] * xs[i]; }
+    r.com = sx / sw;
+
+    var y0 = ys[a - 1], y1 = ys[a], y2 = ys[a + 1], den = y0 - 2 * y1 + y2;
+    r.par = den < 0 ? xs[a] + Math.max(-1, Math.min(1, 0.5 * (y0 - y2) / den)) : NaN;
+
+    if (y0 > 0 && y1 > 0 && y2 > 0) {
+      var L0 = Math.log(y0), L1 = Math.log(y1), L2 = Math.log(y2), dd = L0 - 2 * L1 + L2;
+      r.g3 = dd < 0 ? xs[a] + Math.max(-1, Math.min(1, 0.5 * (L0 - L2) / dd)) : NaN;
+    } else {
+      r.g3 = NaN;
+    }
+
+    var start = isFinite(r.g3) ? r.g3 : (isFinite(r.par) ? r.par : xs[a]);
+    r.fit = gaussFit(xs, ys, a, P, start, best);
+    return r;
+  }
+
+  function signed(v) {
+    if (!isFinite(v)) return "n/a";
+    var t = Math.abs(v).toFixed(2);
+    return t === "0.00" ? "0.00" : (v > 0 ? "+" : "\u2212") + t;
+  }
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function niceStep(span) {
+    var raw = span / 5, pow = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / pow;
+    return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * pow;
+  }
+
+  function render() {
+    var P = +pts.value, nz = +noise.value / 100, mu = +offset.value, step = fwhmPpm / P;
+    el("pts-out").textContent = P;
+    el("noise-out").textContent = Math.round(nz * 100) + "%";
+    el("offset-out").textContent = (mu >= 0 ? "" : "\u2212") + Math.abs(mu).toFixed(2);
+
+    var d = simulate(P, mu, nz, Z, clip.checked), r = estimate(d.xs, d.ys, P);
+
+    var dpr = window.devicePixelRatio || 1, W = canvas.clientWidth, H = canvas.clientHeight;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    var c = canvas.getContext("2d");
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
+
+    var ink = cssVar("--ink"), ink3 = cssVar("--ink-3"), rule = cssVar("--rule"), curve = cssVar("--curve");
+    var L = 12, R = 12, T = 14, B = 40, x0 = -2.2 * P, x1 = 2.2 * P, ylo = -0.25, yhi = 1.3;
+    var X = function (v) { return L + (v - x0) / (x1 - x0) * (W - L - R); };
+    var Y = function (v) { return T + (yhi - v) / (yhi - ylo) * (H - T - B); };
+
+    c.strokeStyle = rule; c.lineWidth = 1;
+    var yb = H - B;
+    c.beginPath(); c.moveTo(L, Y(0)); c.lineTo(W - R, Y(0)); c.stroke();
+    c.strokeStyle = ink3; c.beginPath(); c.moveTo(L, yb); c.lineTo(W - R, yb); c.stroke();
+
+    var spanPpm = (x1 - x0) * step, tick = niceStep(spanPpm);
+    c.fillStyle = ink3; c.font = "12px " + cssVar("--font"); c.textAlign = "center";
+    for (var t = Math.ceil(x0 * step / tick) * tick; t <= x1 * step + 1e-9; t += tick) {
+      var xv = t / step, xp = X(xv);
+      c.beginPath(); c.moveTo(xp, yb); c.lineTo(xp, yb + 5); c.stroke();
+      var lbl = Math.abs(t) < 1e-9 ? "0" : (t > 0 ? "+" : "\u2212") + Math.abs(+t.toFixed(6));
+      c.fillText(lbl, xp, yb + 18);
+    }
+    c.textAlign = "center"; c.fillText("ppm from true center", (L + W - R) / 2, H - 4);
+
+    var s = P / 2.3548;
+    c.strokeStyle = curve; c.lineWidth = 1.5; c.beginPath();
+    for (var i = 0; i <= 400; i++) {
+      var xx = x0 + (x1 - x0) * i / 400, yy = Math.exp(-((xx - mu) * (xx - mu)) / (2 * s * s));
+      if (i) c.lineTo(X(xx), Y(yy)); else c.moveTo(X(xx), Y(yy));
+    }
+    c.stroke();
+
+    c.setLineDash([5, 5]); c.strokeStyle = ink3; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(X(mu), T); c.lineTo(X(mu), yb); c.stroke();
+    c.setLineDash([]);
+
+    KEYS.forEach(function (k, j) {
+      if (!isFinite(r[k])) return;
+      var col = cssVar("--m-" + k), xp = X(r[k]), ytop = Y(1.27 - j * 0.065);
+      c.strokeStyle = col;
+      c.globalAlpha = 0.3; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(xp, ytop); c.lineTo(xp, Y(0)); c.stroke();
+      c.globalAlpha = 1; c.lineWidth = 4;
+      c.beginPath(); c.moveTo(xp, ytop - 14); c.lineTo(xp, ytop + 2); c.stroke();
+    });
+
+    c.fillStyle = ink;
+    d.xs.forEach(function (xv, i) {
+      if (xv < x0 || xv > x1) return;
+      c.beginPath(); c.arc(X(xv), Y(d.ys[i]), 3.5, 0, 2 * Math.PI); c.fill();
+    });
+
+    rows.innerHTML = KEYS.map(function (k) {
+      var tr = trialResults;
+      return "<tr><td><span class=\"sw\" style=\"background:var(--m-" + k + ")\"></span>" + NAMES[k] + "</td>" +
+        "<td>" + signed((r[k] - mu) * step) + "</td>" +
+        "<td>" + (tr ? (isFinite(tr[k].rms) ? tr[k].rms.toFixed(2) : "n/a") : "\u2014") + "</td>" +
+        "<td>" + (tr ? signed(tr[k].bias) : "\u2014") + "</td></tr>";
+    }).join("");
+  }
+
+  function runTrials() {
+    var P = +pts.value, nz = +noise.value / 100, step = fwhmPpm / P, doClip = clip.checked, acc = {};
+    KEYS.forEach(function (k) { acc[k] = { n: 0, s: 0, ss: 0, f: 0 }; });
+    var z = new Array(N_NOISE);
+    for (var t = 0; t < N_TRIALS; t++) {
+      var mu = Math.random() - 0.5;
+      for (var i = 0; i < N_NOISE; i++) z[i] = randn();
+      var d = simulate(P, mu, nz, z, doClip), r = estimate(d.xs, d.ys, P);
+      KEYS.forEach(function (k) {
+        var e = (r[k] - mu) * step;
+        if (isFinite(e)) { acc[k].n++; acc[k].s += e; acc[k].ss += e * e; } else acc[k].f++;
+      });
+    }
+    trialResults = {};
+    var fails = [];
+    KEYS.forEach(function (k) {
+      var a = acc[k];
+      trialResults[k] = { rms: a.n ? Math.sqrt(a.ss / a.n) : NaN, bias: a.n ? a.s / a.n : NaN };
+      if (a.f) fails.push(NAMES[k] + " failed in " + (100 * a.f / N_TRIALS).toFixed(1) + "% of trials");
+    });
+    status.textContent = "Trials: " + P + " points per FWHM, " + Math.round(nz * 100) + "% noise, " + fwhmPpm + " ppm FWHM" +
+      (doClip ? ", clipped at zero" : "") + "." + (fails.length ? " " + fails.join("; ") + "." : "");
+    render();
+  }
+
+  function invalidate() {
+    if (trialResults) {
+      trialResults = null;
+      status.textContent = "Settings changed. Run the trials again to update RMS and bias.";
+    }
+    render();
+  }
+
+  fwhm.addEventListener("input", function () {
+    var v = Number(fwhm.value);
+    if (!fwhm.value || !isFinite(v) || v < 1 || v > 500) {
+      fwhm.setAttribute("aria-invalid", "true");
+      fwhmErr.textContent = "Enter a width between 1 and 500 ppm.";
+      return;
+    }
+    fwhm.removeAttribute("aria-invalid");
+    fwhmErr.textContent = "";
+    fwhmPpm = v;
+    invalidate();
+  });
+  pts.addEventListener("input", invalidate);
+  noise.addEventListener("input", invalidate);
+  clip.addEventListener("change", invalidate);
+  offset.addEventListener("input", render);
+  el("redraw").addEventListener("click", function () { Z = makeNoise(); render(); });
+  el("run").addEventListener("click", function () {
+    status.textContent = "Running trials\u2026";
+    setTimeout(runTrials, 20);
+  });
+  window.addEventListener("resize", render);
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", render);
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+  render();
+})();
+</script>
+</body>
+</html>
