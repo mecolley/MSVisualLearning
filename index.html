@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mass spectrometry signal processing: interactive lessons</title>
+<meta name="description" content="Interactive, browser-based lessons on the fundamentals of mass spectrometry signal processing: peaks, noise, detection, centroiding, resolution, calibration.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 27 C10 27 12 4 16 4 S22 27 30 27' fill='none' stroke='%230072B2' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mass spectrometry signal processing, one idea at a time">
+<meta property="og:description" content="Interactive, browser-based lessons on the fundamentals of mass spectrometry signal processing: peaks, noise, detection, centroiding, resolution and calibration.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F7F9FB;
+  --surface: #FFFFFF;
+  --ink: #17212B;
+  --ink-2: #4A5866;
+  --ink-3: #6B7884;
+  --rule: #D9E0E6;
+  --accent: #0072B2;
+  --trace: #0072B2;
+  --font: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #12161B;
+    --surface: #1A2027;
+    --ink: #E6EBF0;
+    --ink-2: #A7B2BD;
+    --ink-3: #8794A1;
+    --rule: #2C3540;
+    --accent: #56B4E9;
+    --trace: #56B4E9;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.55; }
+.page { max-width: 880px; margin: 0 auto; padding: 56px 24px 64px; }
+h1 { font-size: 40px; line-height: 1.12; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 14px; max-width: 18ch; }
+h2 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+.lede { font-size: 18px; color: var(--ink-2); max-width: 62ch; margin: 0; }
+.trace { display: block; width: 100%; height: 90px; margin: 36px 0 44px; }
+.trace path { fill: none; stroke: var(--trace); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.trace line { stroke: var(--rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.section-note { color: var(--ink-3); font-size: 15px; margin: 0 0 18px; }
+ol.lessons { list-style: none; margin: 0; padding: 0; counter-reset: lesson; border-top: 1px solid var(--rule); }
+ol.lessons > li { counter-increment: lesson; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 20px 0; border-bottom: 1px solid var(--rule); }
+ol.lessons > li::before { content: counter(lesson); font-size: 15px; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.lesson-title { font-size: 18px; font-weight: 500; margin: 0 0 4px; }
+.lesson-title a { color: var(--ink); text-decoration: none; }
+.lesson-title a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.lesson-summary { color: var(--ink-2); margin: 0 0 6px; max-width: 60ch; }
+.lesson-covers { color: var(--ink-3); font-size: 14px; margin: 0; }
+.status { font-size: 14px; white-space: nowrap; }
+.status a { display: inline-block; padding: 6px 12px; border-radius: 4px; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 500; }
+.status a:hover { filter: brightness(0.95); }
+.status .planned { color: var(--ink-3); }
+li.is-planned .lesson-title { color: var(--ink-2); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+footer { margin-top: 48px; color: var(--ink-3); font-size: 14px; max-width: 62ch; }
+footer p { margin: 0 0 8px; }
+@media (max-width: 640px) {
+  .page { padding: 36px 16px 48px; }
+  h1 { font-size: 30px; }
+  .lede { font-size: 17px; }
+  .trace { margin: 28px 0 32px; height: 70px; }
+  ol.lessons > li { grid-template-columns: 28px minmax(0, 1fr); }
+  .status { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Mass spectrometry signal processing, one idea at a time</h1>
+    <p class="lede">Interactive lessons on what happens between the detector and a peak list: what a peak is, what noise is, and how software decides where a peak is and how much is there. Each lesson runs entirely in your browser.</p>
+  </header>
+
+  <svg class="trace" viewBox="0 0 1000 90" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <line x1="0" y1="84" x2="1000" y2="84"></line>
+    <path d="M0,82.0 L3,81.3 L6,82.0 L9,82.0 L12,82.6 L15,82.0 L18,80.8 L21,81.4 L24,80.9 L27,81.6 L30,81.5 L33,81.7 L36,83.4 L39,81.1 L42,81.4 L45,81.5 L48,83.5 L51,83.5 L54,82.8 L57,82.4 L60,81.7 L63,82.0 L66,81.5 L69,82.6 L72,81.7 L75,81.7 L78,82.7 L81,80.5 L84,81.6 L87,81.0 L90,82.7 L93,82.8 L96,82.4 L99,82.2 L102,81.6 L105,81.9 L108,82.6 L111,83.0 L114,82.7 L117,81.1 L120,82.9 L123,82.0 L126,81.8 L129,83.6 L132,82.2 L135,81.1 L138,84.0 L141,82.6 L144,82.2 L147,82.1 L150,78.3 L153,72.4 L156,64.4 L159,55.5 L162,57.1 L165,65.1 L168,72.4 L171,76.3 L174,75.1 L177,74.6 L180,73.4 L183,77.4 L186,80.3 L189,82.8 L192,83.1 L195,82.9 L198,81.3 L201,84.0 L204,83.8 L207,82.3 L210,81.2 L213,82.0 L216,84.0 L219,84.0 L222,82.2 L225,83.2 L228,83.6 L231,81.7 L234,81.6 L237,82.4 L240,82.4 L243,82.2 L246,81.2 L249,82.0 L252,82.1 L255,82.1 L258,84.0 L261,81.5 L264,81.8 L267,82.2 L270,84.0 L273,83.3 L276,81.9 L279,84.0 L282,82.9 L285,81.8 L288,83.9 L291,81.3 L294,82.2 L297,82.9 L300,82.5 L303,82.2 L306,82.7 L309,81.7 L312,83.4 L315,83.2 L318,81.8 L321,82.8 L324,83.6 L327,82.0 L330,81.5 L333,83.2 L336,84.0 L339,83.0 L342,83.0 L345,83.1 L348,81.6 L351,83.8 L354,81.7 L357,84.0 L360,83.6 L363,82.3 L366,81.9 L369,82.1 L372,82.6 L375,82.8 L378,82.8 L381,82.4 L384,83.1 L387,82.7 L390,82.4 L393,83.0 L396,82.2 L399,82.3 L402,80.3 L405,79.4 L408,73.1 L411,58.7 L414,36.9 L417,15.1 L420,7.3 L423,15.3 L426,34.1 L429,56.7 L432,63.4 L435,58.3 L438,48.4 L441,41.4 L444,43.8 L447,52.7 L450,64.7 L453,73.2 L456,72.5 L459,72.3 L462,70.5 L465,69.7 L468,72.3 L471,76.1 L474,81.7 L477,81.0 L480,79.5 L483,80.8 L486,79.4 L489,78.9 L492,80.1 L495,80.6 L498,84.0 L501,83.3 L504,83.4 L507,82.6 L510,82.2 L513,84.0 L516,82.2 L519,84.0 L522,82.6 L525,84.0 L528,83.0 L531,82.1 L534,83.4 L537,83.0 L540,82.5 L543,83.1 L546,83.3 L549,81.8 L552,82.3 L555,83.5 L558,80.7 L561,84.0 L564,82.4 L567,83.5 L570,83.2 L573,82.6 L576,83.1 L579,82.7 L582,84.0 L585,84.0 L588,82.7 L591,84.0 L594,84.0 L597,84.0 L600,82.2 L603,82.6 L606,82.0 L609,84.0 L612,83.3 L615,84.0 L618,82.6 L621,81.9 L624,84.0 L627,81.9 L630,82.5 L633,83.5 L636,84.0 L639,82.1 L642,83.5 L645,83.9 L648,83.0 L651,83.0 L654,82.0 L657,84.0 L660,82.4 L663,82.0 L666,82.1 L669,83.6 L672,84.0 L675,82.5 L678,83.3 L681,83.3 L684,81.8 L687,82.1 L690,79.3 L693,66.7 L696,52.0 L699,38.0 L702,41.0 L705,56.1 L708,69.6 L711,74.4 L714,72.1 L717,64.3 L720,62.2 L723,64.7 L726,71.7 L729,77.4 L732,81.7 L735,79.5 L738,80.1 L741,78.4 L744,80.2 L747,79.6 L750,83.4 L753,83.2 L756,83.6 L759,83.5 L762,84.0 L765,83.3 L768,81.9 L771,83.5 L774,83.0 L777,82.6 L780,83.7 L783,84.0 L786,84.0 L789,82.6 L792,84.0 L795,84.0 L798,82.6 L801,82.8 L804,83.5 L807,82.8 L810,83.4 L813,84.0 L816,84.0 L819,84.0 L822,82.7 L825,84.0 L828,84.0 L831,84.0 L834,84.0 L837,83.7 L840,84.0 L843,83.2 L846,84.0 L849,83.3 L852,84.0 L855,84.0 L858,82.9 L861,83.8 L864,84.0 L867,83.8 L870,81.1 L873,77.7 L876,70.8 L879,66.5 L882,67.6 L885,73.2 L888,77.7 L891,81.5 L894,82.9 L897,84.0 L900,82.8 L903,82.4 L906,83.9 L909,84.0 L912,81.9 L915,84.0 L918,83.2 L921,81.4 L924,84.0 L927,83.0 L930,81.9 L933,83.8 L936,83.1 L939,82.8 L942,84.0 L945,83.7 L948,83.4 L951,82.9 L954,83.7 L957,83.8 L960,84.0 L963,84.0 L966,82.9 L969,83.6 L972,84.0 L975,84.0 L978,81.2 L981,82.6 L984,83.1 L987,84.0 L990,83.1 L993,83.2 L996,82.2 L999,83.3"></path>
+  </svg>
+
+  <main>
+    <h2>Lessons</h2>
+    <p class="section-note">Listed in a suggested order, from the raw signal to a calibrated peak list.</p>
+
+    <!--
+      HOW TO ADD A LESSON
+      Put the lesson's .html file in the same folder as this index, then copy one
+      of the two blocks below into the list where it belongs. Numbering updates
+      automatically.
+
+      Available lesson:
+      <li>
+        <div>
+          <h3 class="lesson-title"><a href="your_file.html">Lesson title</a></h3>
+          <p class="lesson-summary">One or two sentences on what the learner will see and try.</p>
+          <p class="lesson-covers">Covers: concept one, concept two, concept three</p>
+        </div>
+        <div class="status"><a href="your_file.html">Open lesson</a></div>
+      </li>
+
+      Planned lesson (no link yet):
+      <li class="is-planned">
+        <div>
+          <h3 class="lesson-title">Lesson title</h3>
+          <p class="lesson-summary">One or two sentences on what it will show.</p>
+          <p class="lesson-covers">Covers: concept one, concept two</p>
+        </div>
+        <div class="status"><span class="planned">Planned</span></div>
+      </li>
+    -->
+
+    <ol class="lessons">
+      <li class="is-planned">
+        <div>
+          <h3 class="lesson-title">Anatomy of a spectrum</h3>
+          <p class="lesson-summary">How a stream of ion arrivals becomes a sampled profile, and why every peak at a given m/z has a predictable width.</p>
+          <p class="lesson-covers">Covers: sampling, resolving power and FWHM, profile versus centroid data</p>
+        </div>
+        <div class="status"><span class="planned">Planned</span></div>
+      </li>
+
+      <li class="is-planned">
+        <div>
+          <h3 class="lesson-title">What noise looks like</h3>
+          <p class="lesson-summary">Counting, electronic and chemical noise side by side, and why only some of them average away.</p>
+          <p class="lesson-covers">Covers: Poisson statistics, detector noise, chemical background, baseline</p>
+        </div>
+        <div class="status"><span class="planned">Planned</span></div>
+      </li>
+
+      <li class="is-planned">
+        <div>
+          <h3 class="lesson-title">Smoothing and baseline removal</h3>
+          <p class="lesson-summary">Noise is narrower than a peak and baseline is wider. See how filters use that difference, and what they cost.</p>
+          <p class="lesson-covers">Covers: moving average, Savitzky–Golay, matched filters, baseline estimation</p>
+        </div>
+        <div class="status"><span class="planned">Planned</span></div>
+      </li>
+
+      <li class="is-planned">
+        <div>
+          <h3 class="lesson-title">Detecting peaks</h3>
+          <p class="lesson-summary">Set a signal-to-noise threshold and count the false peaks it lets through in a long spectrum.</p>
+          <p class="lesson-covers">Covers: noise estimation, thresholds, multiple testing, wavelet detection</p>
+        </div>
+        <div class="status"><span class="planned">Planned</span></div>
+      </li>
+
+      <li>
+        <div>
+          <h3 class="lesson-title"><a href="peak_centroid_demo.html">Finding a peak’s center</a></h3>
+          <p class="lesson-summary">Five ways to estimate a peak’s m/z from sampled points, compared under different sampling and noise.</p>
+          <p class="lesson-covers">Covers: apex, center of mass, parabolic and Gaussian interpolation, least-squares fitting, the counting limit</p>
+        </div>
+        <div class="status"><a href="peak_centroid_demo.html">Open lesson</a></div>
+      </li>
+
+      <li class="is-planned">
+        <div>
+          <h3 class="lesson-title">Overlapping peaks and resolution</h3>
+          <p class="lesson-summary">Slide two peaks together and watch them merge into one, and what that does to the reported m/z.</p>
+          <p class="lesson-covers">Covers: resolving power, unresolved pairs, peak width as a diagnostic</p>
+        </div>
+        <div class="status"><span class="planned">Planned</span></div>
+      </li>
+
+      <li class="is-planned">
+        <div>
+          <h3 class="lesson-title">Mass calibration</h3>
+          <p class="lesson-summary">Turn flight times into m/z, then correct the drift using ions of known mass.</p>
+          <p class="lesson-covers">Covers: TOF calibration functions, lock masses, ppm error, robust fitting</p>
+        </div>
+        <div class="status"><span class="planned">Planned</span></div>
+      </li>
+
+      <li class="is-planned">
+        <div>
+          <h3 class="lesson-title">Combining many scans</h3>
+          <p class="lesson-summary">Sum scans first or pick peaks first? Compare both, with and without drift between scans.</p>
+          <p class="lesson-covers">Covers: signal averaging, square-root-of-N gains, peak matching across scans</p>
+        </div>
+        <div class="status"><span class="planned">Planned</span></div>
+      </li>
+    </ol>
+  </main>
+
+  <footer>
+    <p>The lessons use simulated data, so the true answer is always known. Nothing you do on these pages is sent anywhere.</p>
+  </footer>
+</div>
+</body>
+</html>

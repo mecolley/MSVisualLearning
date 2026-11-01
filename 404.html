@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 27 C10 27 12 4 16 4 S22 27 30 27' fill='none' stroke='%230072B2' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F7F9FB;
+  --surface: #FFFFFF;
+  --ink: #17212B;
+  --ink-2: #4A5866;
+  --ink-3: #6B7884;
+  --rule: #D9E0E6;
+  --accent: #0072B2;
+  --trace: #0072B2;
+  --font: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #12161B;
+    --surface: #1A2027;
+    --ink: #E6EBF0;
+    --ink-2: #A7B2BD;
+    --ink-3: #8794A1;
+    --rule: #2C3540;
+    --accent: #56B4E9;
+    --trace: #56B4E9;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.55; }
+.page { max-width: 880px; margin: 0 auto; padding: 56px 24px 64px; }
+h1 { font-size: 40px; line-height: 1.12; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 14px; max-width: 18ch; }
+h2 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+.lede { font-size: 18px; color: var(--ink-2); max-width: 62ch; margin: 0; }
+.trace { display: block; width: 100%; height: 90px; margin: 36px 0 44px; }
+.trace path { fill: none; stroke: var(--trace); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.trace line { stroke: var(--rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.section-note { color: var(--ink-3); font-size: 15px; margin: 0 0 18px; }
+ol.lessons { list-style: none; margin: 0; padding: 0; counter-reset: lesson; border-top: 1px solid var(--rule); }
+ol.lessons > li { counter-increment: lesson; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 20px 0; border-bottom: 1px solid var(--rule); }
+ol.lessons > li::before { content: counter(lesson); font-size: 15px; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.lesson-title { font-size: 18px; font-weight: 500; margin: 0 0 4px; }
+.lesson-title a { color: var(--ink); text-decoration: none; }
+.lesson-title a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.lesson-summary { color: var(--ink-2); margin: 0 0 6px; max-width: 60ch; }
+.lesson-covers { color: var(--ink-3); font-size: 14px; margin: 0; }
+.status { font-size: 14px; white-space: nowrap; }
+.status a { display: inline-block; padding: 6px 12px; border-radius: 4px; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 500; }
+.status a:hover { filter: brightness(0.95); }
+.status .planned { color: var(--ink-3); }
+li.is-planned .lesson-title { color: var(--ink-2); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+footer { margin-top: 48px; color: var(--ink-3); font-size: 14px; max-width: 62ch; }
+footer p { margin: 0 0 8px; }
+@media (max-width: 640px) {
+  .page { padding: 36px 16px 48px; }
+  h1 { font-size: 30px; }
+  .lede { font-size: 17px; }
+  .trace { margin: 28px 0 32px; height: 70px; }
+  ol.lessons > li { grid-template-columns: 28px minmax(0, 1fr); }
+  .status { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>This page isn’t here</h1>
+    <p class="lede">The link may be mistyped, or the lesson may have moved. All lessons are listed on the home page.</p>
+  </header>
+  <p style="margin-top: 32px;"><a href="index.html" style="color: var(--accent); font-weight: 500;">Go to all lessons</a></p>
+</div>
+</body>
+</html>
