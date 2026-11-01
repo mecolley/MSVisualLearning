@@ -2,7 +2,7 @@
 
 Interactive, browser-based lessons on what happens between a mass spectrometer's detector and a peak list: what a peak is, what noise is, and how software decides where a peak is and how much is there.
 
-**Live site:** https://YOUR-USERNAME.github.io/REPO-NAME/
+**Live site:** https://mecolley.github.io/MSVisualLearning/
 
 Every lesson uses simulated data, so the true answer is always known, and everything runs in the browser. There is nothing to install and no data leaves the page.
 
@@ -23,11 +23,6 @@ Every lesson uses simulated data, so the true answer is always known, and everyt
 
 Download the repository and open `index.html` in any browser. Each lesson is a single self-contained HTML file, so it can also be emailed or shared on its own.
 
-## Adding a lesson
-
-1. Put the lesson's `.html` file in the repository's top folder. Use lowercase names with no spaces, because GitHub Pages links are case-sensitive.
-2. In `index.html`, find the comment that starts `HOW TO ADD A LESSON` and copy the template into the list.
-3. Add a row to the table above.
 
 ## Files
 
@@ -40,5 +35,3 @@ Download the repository and open `index.html` in any browser. Each lesson is a s
 - `overlapping_peaks.html`: Overlapping peaks and resolution
 - `mass_calibration.html`: Mass calibration
 - `combining_scans.html`: Combining many scans
-- `404.html`: shown by GitHub Pages for broken links
-- `.nojekyll`: tells GitHub Pages to serve the files as they are, without processing them
