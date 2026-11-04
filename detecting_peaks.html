@@ -76,6 +76,13 @@ button:hover { filter: brightness(0.96); }
 .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
 .pager .next { margin-left: auto; text-align: right; }
 .pager small { display: block; color: var(--ink-3); font-size: 13px; }
+
+.refs { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.refs > p { color: var(--ink-3); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+.reflist { list-style: none; margin: 0; padding: 0; }
+.reflist > li { margin: 0 0 16px; }
+.ref-topic { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+.ref { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; max-width: 80ch; padding-left: 14px; text-indent: -14px; }
 </style>
 </head>
 <body>
@@ -143,6 +150,37 @@ button:hover { filter: brightness(0.96); }
       <p>A matched filter (smoothing with the peak’s own shape) is the best linear way to find peaks of known shape in random noise. Height alone is never the only clue; width, repetition across scans and isotope partners help too.</p>
     </div>
 
+  </section>
+  <section class="refs" aria-labelledby="refs-t">
+    <h2 id="refs-t">Where these ideas come from</h2>
+    <p>The original papers and books behind the concepts in this lesson.</p>
+    <ul class="reflist">
+      <li>
+        <p class="ref-topic">Signal detection as a decision with false alarms and misses</p>
+        <p class="ref">Peterson, W. W., Birdsall, T. G. &amp; Fox, W. C. (1954). The theory of signal detectability. <i>Transactions of the IRE Professional Group on Information Theory</i> 4(4), 171–212.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Matched filtering</p>
+        <p class="ref">Turin, G. L. (1960). An introduction to matched filters. <i>IRE Transactions on Information Theory</i> 6(3), 311–329.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Robust noise estimates: the median absolute deviation</p>
+        <p class="ref">Hampel, F. R. (1974). The influence curve and its role in robust estimation. <i>Journal of the American Statistical Association</i> 69(346), 383–393.</p>
+        <p class="ref">Rousseeuw, P. J. &amp; Croux, C. (1993). Alternatives to the median absolute deviation. <i>Journal of the American Statistical Association</i> 88(424), 1273–1283.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Multiple testing and false discoveries</p>
+        <p class="ref">Benjamini, Y. &amp; Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. <i>Journal of the Royal Statistical Society B</i> 57(1), 289–300.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Wavelet-based peak detection in mass spectra</p>
+        <p class="ref">Du, P., Kibbe, W. A. &amp; Lin, S. M. (2006). Improved peak detection in mass spectrum by incorporating continuous wavelet transform-based pattern matching. <i>Bioinformatics</i> 22(17), 2059–2065.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Comparing peak detection algorithms on MALDI data</p>
+        <p class="ref">Yang, C., He, Z. &amp; Yu, W. (2009). Comparison of public peak detection algorithms for MALDI mass spectrometry data analysis. <i>BMC Bioinformatics</i> 10, 4.</p>
+      </li>
+    </ul>
   </section>
 <nav class="pager" aria-label="Lesson navigation">
 <a class="prev" href="smoothing_and_baseline.html"><small>Previous lesson</small>Smoothing and baseline removal</a>

@@ -76,6 +76,13 @@ button:hover { filter: brightness(0.96); }
 .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
 .pager .next { margin-left: auto; text-align: right; }
 .pager small { display: block; color: var(--ink-3); font-size: 13px; }
+
+.refs { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.refs > p { color: var(--ink-3); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+.reflist { list-style: none; margin: 0; padding: 0; }
+.reflist > li { margin: 0 0 16px; }
+.ref-topic { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+.ref { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; max-width: 80ch; padding-left: 14px; text-indent: -14px; }
 </style>
 </head>
 <body>
@@ -161,6 +168,42 @@ button:hover { filter: brightness(0.96); }
       <p>The unresolved background is flat across the window. Each bin is independent: the analog detector’s pulses add random height but not width here (the anatomy lesson shows pulse width). Ion numbers are a teaching range, not values from a particular instrument, and this is a time-of-flight picture; Orbitrap and FT-ICR noise comes mainly from the electronics measuring the image current.</p>
     </div>
 
+  </section>
+  <section class="refs" aria-labelledby="refs-t">
+    <h2 id="refs-t">Where these ideas come from</h2>
+    <p>The original papers and books behind the concepts in this lesson.</p>
+    <ul class="reflist">
+      <li>
+        <p class="ref-topic">Counting statistics</p>
+        <p class="ref">Poisson, S. D. (1837). <i>Recherches sur la probabilité des jugements en matière criminelle et en matière civile.</i> Paris: Bachelier.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Shot noise from discrete charges</p>
+        <p class="ref">Schottky, W. (1918). Über spontane Stromschwankungen in verschiedenen Elektrizitätsleitern. <i>Annalen der Physik</i> 362(23), 541–567.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Thermal (electronic) noise</p>
+        <p class="ref">Johnson, J. B. (1928). Thermal agitation of electricity in conductors. <i>Physical Review</i> 32(1), 97–109.</p>
+        <p class="ref">Nyquist, H. (1928). Thermal agitation of electric charge in conductors. <i>Physical Review</i> 32(1), 110–113.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Excess noise from variable detector gain</p>
+        <p class="ref">Shockley, W. &amp; Pierce, J. R. (1938). A theory of noise for electron multipliers. <i>Proceedings of the Institute of Radio Engineers</i> 26(3), 321–332.</p>
+        <p class="ref">Wiza, J. L. (1979). Microchannel plate detectors. <i>Nuclear Instruments and Methods</i> 162(1–3), 587–601.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Averaging and how uncertainty falls as 1 ÷ √N</p>
+        <p class="ref">Bevington, P. R. &amp; Robinson, D. K. (2003). <i>Data Reduction and Error Analysis for the Physical Sciences</i>, 3rd edition. McGraw-Hill.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Calibrating signal units from variance versus mean (the photon transfer method)</p>
+        <p class="ref">Janesick, J. R. (2007). <i>Photon Transfer: DN → λ.</i> SPIE Press.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Resolving power and what high resolution separates</p>
+        <p class="ref">Marshall, A. G. &amp; Hendrickson, C. L. (2008). High-resolution mass spectrometers. <i>Annual Review of Analytical Chemistry</i> 1, 579–599.</p>
+      </li>
+    </ul>
   </section>
 <nav class="pager" aria-label="Lesson navigation">
 <a class="prev" href="anatomy_of_a_spectrum.html"><small>Previous lesson</small>Anatomy of a spectrum</a>

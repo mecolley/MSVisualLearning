@@ -76,6 +76,13 @@ button:hover { filter: brightness(0.96); }
 .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
 .pager .next { margin-left: auto; text-align: right; }
 .pager small { display: block; color: var(--ink-3); font-size: 13px; }
+
+.refs { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.refs > p { color: var(--ink-3); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+.reflist { list-style: none; margin: 0; padding: 0; }
+.reflist > li { margin: 0 0 16px; }
+.ref-topic { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+.ref { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; max-width: 80ch; padding-left: 14px; text-indent: -14px; }
 </style>
 </head>
 <body>
@@ -139,6 +146,30 @@ button:hover { filter: brightness(0.96); }
       <p>Fitting several peaks of known shape (deconvolution) can separate pairs closer than the resolution, but it needs good signal-to-noise and an accurate peak model.</p>
     </div>
 
+  </section>
+  <section class="refs" aria-labelledby="refs-t">
+    <h2 id="refs-t">Where these ideas come from</h2>
+    <p>The original papers and books behind the concepts in this lesson.</p>
+    <ul class="reflist">
+      <li>
+        <p class="ref-topic">When two peaks count as resolved</p>
+        <p class="ref">Rayleigh, Lord (Strutt, J. W.) (1879). Investigations in optics, with special reference to the spectroscope. <i>Philosophical Magazine</i> 8(49), 261–274.</p>
+      </li>
+      <li>
+        <p class="ref-topic">When a mixture of two Gaussians has one maximum or two</p>
+        <p class="ref">Schilling, M. F., Watkins, A. E. &amp; Watkins, W. (2002). Is human height bimodal? <i>The American Statistician</i> 56(3), 223–229.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Resolution definitions used in mass spectrometry</p>
+        <p class="ref">Murray, K. K., Boyd, R. K., Eberlin, M. N., Langley, G. J., Li, L. &amp; Naito, Y. (2013). Definitions of terms relating to mass spectrometry (IUPAC Recommendations 2013). <i>Pure and Applied Chemistry</i> 85(7), 1515–1609.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Separating overlapping peaks by deconvolution and fitting</p>
+        <p class="ref">Jansson, P. A. (ed.) (1984). <i>Deconvolution: With Applications in Spectroscopy.</i> Academic Press.</p>
+        <p class="ref">Levenberg, K. (1944). A method for the solution of certain non-linear problems in least squares. <i>Quarterly of Applied Mathematics</i> 2(2), 164–168.</p>
+        <p class="ref">Marquardt, D. W. (1963). An algorithm for least-squares estimation of nonlinear parameters. <i>Journal of the Society for Industrial and Applied Mathematics</i> 11(2), 431–441.</p>
+      </li>
+    </ul>
   </section>
 <nav class="pager" aria-label="Lesson navigation">
 <a class="prev" href="peak_centroid_demo.html"><small>Previous lesson</small>Finding a peak’s center</a>

@@ -76,6 +76,13 @@ button:hover { filter: brightness(0.96); }
 .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
 .pager .next { margin-left: auto; text-align: right; }
 .pager small { display: block; color: var(--ink-3); font-size: 13px; }
+
+.refs { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.refs > p { color: var(--ink-3); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+.reflist { list-style: none; margin: 0; padding: 0; }
+.reflist > li { margin: 0 0 16px; }
+.ref-topic { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+.ref { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; max-width: 80ch; padding-left: 14px; text-indent: -14px; }
 </style>
 </head>
 <body>
@@ -159,6 +166,46 @@ button:hover { filter: brightness(0.96); }
       <p>The ion numbers on the slider are a teaching range, from barely detectable to very precise, not values from a particular instrument.</p>
     </div>
 
+  </section>
+  <section class="refs" aria-labelledby="refs-t">
+    <h2 id="refs-t">Where these ideas come from</h2>
+    <p>The original papers and books behind the concepts in this lesson.</p>
+    <ul class="reflist">
+      <li>
+        <p class="ref-topic">Time-of-flight mass analysis and the time–mass relationship</p>
+        <p class="ref">Wiley, W. C. &amp; McLaren, I. H. (1955). Time-of-flight mass spectrometer with improved resolution. <i>Review of Scientific Instruments</i> 26(12), 1150–1157.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Resolving power, FWHM and other mass spectrometry terms</p>
+        <p class="ref">Murray, K. K., Boyd, R. K., Eberlin, M. N., Langley, G. J., Li, L. &amp; Naito, Y. (2013). Definitions of terms relating to mass spectrometry (IUPAC Recommendations 2013). <i>Pure and Applied Chemistry</i> 85(7), 1515–1609.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Counting statistics: why ion counts follow a Poisson distribution</p>
+        <p class="ref">Poisson, S. D. (1837). <i>Recherches sur la probabilité des jugements en matière criminelle et en matière civile.</i> Paris: Bachelier.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Shot noise from discrete charges</p>
+        <p class="ref">Schottky, W. (1918). Über spontane Stromschwankungen in verschiedenen Elektrizitätsleitern. <i>Annalen der Physik</i> 362(23), 541–567.</p>
+      </li>
+      <li>
+        <p class="ref-topic">The limit on how precisely a peak position can be estimated</p>
+        <p class="ref">Rao, C. R. (1945). Information and the accuracy attainable in the estimation of statistical parameters. <i>Bulletin of the Calcutta Mathematical Society</i> 37, 81–91.</p>
+        <p class="ref">Cramér, H. (1946). <i>Mathematical Methods of Statistics.</i> Princeton University Press.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Microchannel plate detectors and their pulse-height spread</p>
+        <p class="ref">Wiza, J. L. (1979). Microchannel plate detectors. <i>Nuclear Instruments and Methods</i> 162(1–3), 587–601.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Excess noise from variable gain in electron multipliers</p>
+        <p class="ref">Shockley, W. &amp; Pierce, J. R. (1938). A theory of noise for electron multipliers. <i>Proceedings of the Institute of Radio Engineers</i> 26(3), 321–332.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Image-current detection in FT-ICR and Orbitrap instruments</p>
+        <p class="ref">Comisarow, M. B. &amp; Marshall, A. G. (1974). Fourier transform ion cyclotron resonance spectroscopy. <i>Chemical Physics Letters</i> 25(2), 282–283.</p>
+        <p class="ref">Makarov, A. (2000). Electrostatic axially harmonic orbital trapping: a high-performance technique of mass analysis. <i>Analytical Chemistry</i> 72(6), 1156–1162.</p>
+      </li>
+    </ul>
   </section>
 <nav class="pager" aria-label="Lesson navigation">
 <a class="next" href="what_noise_looks_like.html"><small>Next lesson</small>What noise looks like</a>

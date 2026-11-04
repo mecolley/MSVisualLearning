@@ -76,6 +76,13 @@ button:hover { filter: brightness(0.96); }
 .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
 .pager .next { margin-left: auto; text-align: right; }
 .pager small { display: block; color: var(--ink-3); font-size: 13px; }
+
+.refs { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.refs > p { color: var(--ink-3); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+.reflist { list-style: none; margin: 0; padding: 0; }
+.reflist > li { margin: 0 0 16px; }
+.ref-topic { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+.ref { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; max-width: 80ch; padding-left: 14px; text-indent: -14px; }
 </style>
 </head>
 <body>
@@ -149,6 +156,34 @@ button:hover { filter: brightness(0.96); }
       <p>A common practice combines both: correct each scan’s m/z with a lock mass, sum to find the peaks, then measure each peak in every scan.</p>
     </div>
 
+  </section>
+  <section class="refs" aria-labelledby="refs-t">
+    <h2 id="refs-t">Where these ideas come from</h2>
+    <p>The original papers and books behind the concepts in this lesson.</p>
+    <ul class="reflist">
+      <li>
+        <p class="ref-topic">Averaging and how uncertainty falls as 1 ÷ √N</p>
+        <p class="ref">Bevington, P. R. &amp; Robinson, D. K. (2003). <i>Data Reduction and Error Analysis for the Physical Sciences</i>, 3rd edition. McGraw-Hill.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Lock masses for correcting drift</p>
+        <p class="ref">Olsen, J. V., de Godoy, L. M. F., Li, G., Macek, B., Mortensen, P., Pesch, R., Makarov, A., Lange, O., Horning, S. &amp; Mann, M. (2005). Parts per million mass accuracy on an Orbitrap mass spectrometer via lock mass injection into a C-trap. <i>Molecular &amp; Cellular Proteomics</i> 4(12), 2010–2021.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Aligning and matching peaks across many runs</p>
+        <p class="ref">Smith, C. A., Want, E. J., O’Maille, G., Abagyan, R. &amp; Siuzdak, G. (2006). XCMS: processing mass spectrometry data for metabolite profiling using nonlinear peak alignment, matching, and identification. <i>Analytical Chemistry</i> 78(3), 779–787.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Warping to correct shifts between spectra</p>
+        <p class="ref">Eilers, P. H. C. (2004). Parametric time warping. <i>Analytical Chemistry</i> 76(2), 404–411.</p>
+        <p class="ref">Bloemberg, T. G., Gerretzen, J., Wouters, H. J. P., Gloerich, J., et al. (2010). Improved parametric time warping for proteomics. <i>Chemometrics and Intelligent Laboratory Systems</i> 104, 65–74.</p>
+        <p class="ref">Wehrens, R., Bloemberg, T. G. &amp; Eilers, P. H. C. (2015). Fast parametric warping of peak lists. <i>Bioinformatics</i> 31, 3063–3065.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Mass alignment across many spectra in imaging</p>
+        <p class="ref">Eriksson, J. O., Sánchez Brotons, A., Rezeli, M., Suits, F., Markó-Varga, G. &amp; Horvatovich, P. (2020). MSIWarp: a general approach to mass alignment in mass spectrometry imaging. <i>Analytical Chemistry</i> 92(24), 16138–16148.</p>
+      </li>
+    </ul>
   </section>
 <nav class="pager" aria-label="Lesson navigation">
 <a class="prev" href="mass_calibration.html"><small>Previous lesson</small>Mass calibration</a>

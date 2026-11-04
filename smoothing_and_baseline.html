@@ -76,6 +76,13 @@ button:hover { filter: brightness(0.96); }
 .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
 .pager .next { margin-left: auto; text-align: right; }
 .pager small { display: block; color: var(--ink-3); font-size: 13px; }
+
+.refs { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.refs > p { color: var(--ink-3); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+.reflist { list-style: none; margin: 0; padding: 0; }
+.reflist > li { margin: 0 0 16px; }
+.ref-topic { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+.ref { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; max-width: 80ch; padding-left: 14px; text-indent: -14px; }
 </style>
 </head>
 <body>
@@ -161,6 +168,40 @@ button:hover { filter: brightness(0.96); }
       <p>A linear (axial) TOF at resolving power 600, sampled every 4 ns over flight times of about 22–52 µs. Peaks are Gaussian in flight time and noise is Gaussian. The shape of the high-mass lift is illustrative, a smooth rise, not a model of a particular mechanism, and the unresolved crowd stands for any dense set of small peaks.</p>
     </div>
 
+  </section>
+  <section class="refs" aria-labelledby="refs-t">
+    <h2 id="refs-t">Where these ideas come from</h2>
+    <p>The original papers and books behind the concepts in this lesson.</p>
+    <ul class="reflist">
+      <li>
+        <p class="ref-topic">Savitzky–Golay smoothing</p>
+        <p class="ref">Savitzky, A. &amp; Golay, M. J. E. (1964). Smoothing and differentiation of data by simplified least squares procedures. <i>Analytical Chemistry</i> 36(8), 1627–1639.</p>
+        <p class="ref">Steinier, J., Termonia, Y. &amp; Deltour, J. (1972). Comments on smoothing and differentiation of data by simplified least square procedure. <i>Analytical Chemistry</i> 44(11), 1906–1909.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Matched filtering</p>
+        <p class="ref">Turin, G. L. (1960). An introduction to matched filters. <i>IRE Transactions on Information Theory</i> 6(3), 311–329.</p>
+      </li>
+      <li>
+        <p class="ref-topic">SNIP baseline estimation</p>
+        <p class="ref">Ryan, C. G., Clayton, E., Griffin, W. L., Sie, S. H. &amp; Cousens, D. R. (1988). SNIP, a statistics-sensitive background treatment for the quantitative analysis of PIXE spectra in geoscience applications. <i>Nuclear Instruments and Methods in Physics Research B</i> 34(3), 396–402.</p>
+        <p class="ref">Morháč, M. &amp; Matoušek, V. (2008). Peak clipping algorithms for background estimation in spectroscopic data. <i>Applied Spectroscopy</i> 62(1), 91–106.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Rolling minimum as a morphological opening</p>
+        <p class="ref">Serra, J. (1982). <i>Image Analysis and Mathematical Morphology.</i> Academic Press.</p>
+      </li>
+      <li>
+        <p class="ref-topic">MALDI and linear time-of-flight analysis</p>
+        <p class="ref">Karas, M. &amp; Hillenkamp, F. (1988). Laser desorption ionization of proteins with molecular masses exceeding 10,000 daltons. <i>Analytical Chemistry</i> 60(20), 2299–2301.</p>
+        <p class="ref">Tanaka, K., Waki, H., Ido, Y., Akita, S., Yoshida, Y. &amp; Yoshida, T. (1988). Protein and polymer analyses up to <i>m/z</i> 100 000 by laser ionization time-of-flight mass spectrometry. <i>Rapid Communications in Mass Spectrometry</i> 2(8), 151–153.</p>
+        <p class="ref">Wiley, W. C. &amp; McLaren, I. H. (1955). Time-of-flight mass spectrometer with improved resolution. <i>Review of Scientific Instruments</i> 26(12), 1150–1157.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Smoothing and baseline removal in MALDI-TOF software</p>
+        <p class="ref">Gibb, S. &amp; Strimmer, K. (2012). MALDIquant: a versatile R package for the analysis of mass spectrometry data. <i>Bioinformatics</i> 28(17), 2270–2271.</p>
+      </li>
+    </ul>
   </section>
 <nav class="pager" aria-label="Lesson navigation">
 <a class="prev" href="what_noise_looks_like.html"><small>Previous lesson</small>What noise looks like</a>

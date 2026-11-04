@@ -76,6 +76,13 @@ button:hover { filter: brightness(0.96); }
 .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 15px; }
 .pager .next { margin-left: auto; text-align: right; }
 .pager small { display: block; color: var(--ink-3); font-size: 13px; }
+
+.refs { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.refs > p { color: var(--ink-3); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+.reflist { list-style: none; margin: 0; padding: 0; }
+.reflist > li { margin: 0 0 16px; }
+.ref-topic { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+.ref { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; max-width: 80ch; padding-left: 14px; text-indent: -14px; }
 </style>
 </head>
 <body>
@@ -147,6 +154,37 @@ button:hover { filter: brightness(0.96); }
       <p>During long runs, instruments drift with temperature and electronics. Lock masses, ions present in every scan, let software refit or correct the calibration as it goes. Robust fitting protects against the occasional wrong match.</p>
     </div>
 
+  </section>
+  <section class="refs" aria-labelledby="refs-t">
+    <h2 id="refs-t">Where these ideas come from</h2>
+    <p>The original papers and books behind the concepts in this lesson.</p>
+    <ul class="reflist">
+      <li>
+        <p class="ref-topic">Time-of-flight and why flight time grows with √(m/z)</p>
+        <p class="ref">Wiley, W. C. &amp; McLaren, I. H. (1955). Time-of-flight mass spectrometer with improved resolution. <i>Review of Scientific Instruments</i> 26(12), 1150–1157.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Internal calibration with known ions</p>
+        <p class="ref">Palmblad, M., Bindschedler, L. V., Gibson, T. M. &amp; Cramer, R. (2006). Automatic internal calibration in liquid chromatography/Fourier transform ion cyclotron resonance mass spectrometry of protein digests. <i>Rapid Communications in Mass Spectrometry</i> 20(20), 3076–3080.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Lock masses for continuous recalibration</p>
+        <p class="ref">Olsen, J. V., de Godoy, L. M. F., Li, G., Macek, B., Mortensen, P., Pesch, R., Makarov, A., Lange, O., Horning, S. &amp; Mann, M. (2005). Parts per million mass accuracy on an Orbitrap mass spectrometer via lock mass injection into a C-trap. <i>Molecular &amp; Cellular Proteomics</i> 4(12), 2010–2021.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Instrument-specific calibration functions</p>
+        <p class="ref">Marissen, R. &amp; Palmblad, M. (2021). mzRecal: universal MS1 recalibration in mzML using identified peptides in mzIdentML as internal calibrants. <i>Bioinformatics</i>, btab056.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Robust fitting that rejects outliers</p>
+        <p class="ref">Huber, P. J. (1964). Robust estimation of a location parameter. <i>Annals of Mathematical Statistics</i> 35(1), 73–101.</p>
+        <p class="ref">Fischler, M. A. &amp; Bolles, R. C. (1981). Random sample consensus: a paradigm for model fitting with applications to image analysis and automated cartography. <i>Communications of the ACM</i> 24(6), 381–395.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Recalibration pixel by pixel in imaging</p>
+        <p class="ref">La Rocca, R., Kune, C., Tiquet, M., Stuart, L., Eppe, G., Alexandrov, T., De Pauw, E. &amp; Quinton, L. (2021). Adaptive pixel mass recalibration for mass spectrometry imaging based on locally endogenous biological signals. <i>Analytical Chemistry</i> 93(8), 4066–4074.</p>
+      </li>
+    </ul>
   </section>
 <nav class="pager" aria-label="Lesson navigation">
 <a class="prev" href="overlapping_peaks.html"><small>Previous lesson</small>Overlapping peaks and resolution</a>

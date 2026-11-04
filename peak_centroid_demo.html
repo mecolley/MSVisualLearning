@@ -97,6 +97,13 @@ dd { margin: 2px 0 0; color: var(--ink-2); font-size: 15px; }
 .pager a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pager .next { margin-left: auto; text-align: right; }
 .pager small { display: block; color: var(--ink-3); font-size: 13px; }
+
+.refs { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.refs > p { color: var(--ink-3); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+.reflist { list-style: none; margin: 0; padding: 0; }
+.reflist > li { margin: 0 0 16px; }
+.ref-topic { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+.ref { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; max-width: 80ch; padding-left: 14px; text-indent: -14px; }
 </style>
 </head>
 <body>
@@ -167,6 +174,39 @@ dd { margin: 2px 0 0; color: var(--ink-2); font-size: 15px; }
       <p>With only 2–3 points per FWHM, methods that assume a peak shape do best. With 8 or more points and real noise, the three-point methods lose ground, because three points near the top carry little information, and methods that use many points win.</p>
       <p>No estimator can beat the counting limit: a peak built from N ions has a center uncertain by roughly σ/√N, where σ = FWHM / 2.355. That assumes an ideal ion-counting detector; with an analog detector whose pulse heights vary, N behaves like a smaller effective number of ions.</p>
     </div>
+  </section>
+  <section class="refs" aria-labelledby="refs-t">
+    <h2 id="refs-t">Where these ideas come from</h2>
+    <p>The original papers and books behind the concepts in this lesson.</p>
+    <ul class="reflist">
+      <li>
+        <p class="ref-topic">Least squares</p>
+        <p class="ref">Legendre, A. M. (1805). <i>Nouvelles méthodes pour la détermination des orbites des comètes.</i> Paris: Firmin Didot.</p>
+        <p class="ref">Gauss, C. F. (1809). <i>Theoria motus corporum coelestium in sectionibus conicis solem ambientium.</i> Hamburg: Perthes &amp; Besser.</p>
+      </li>
+      <li>
+        <p class="ref-topic">The Levenberg–Marquardt method for nonlinear fitting</p>
+        <p class="ref">Levenberg, K. (1944). A method for the solution of certain non-linear problems in least squares. <i>Quarterly of Applied Mathematics</i> 2(2), 164–168.</p>
+        <p class="ref">Marquardt, D. W. (1963). An algorithm for least-squares estimation of nonlinear parameters. <i>Journal of the Society for Industrial and Applied Mathematics</i> 11(2), 431–441.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Fitting a Gaussian through its logarithm</p>
+        <p class="ref">Guo, H. (2011). A simple algorithm for fitting a Gaussian function. <i>IEEE Signal Processing Magazine</i> 28(5), 134–137.</p>
+      </li>
+      <li>
+        <p class="ref-topic">The limit on how precisely a peak position can be estimated</p>
+        <p class="ref">Rao, C. R. (1945). Information and the accuracy attainable in the estimation of statistical parameters. <i>Bulletin of the Calcutta Mathematical Society</i> 37, 81–91.</p>
+        <p class="ref">Cramér, H. (1946). <i>Mathematical Methods of Statistics.</i> Princeton University Press.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Counting statistics</p>
+        <p class="ref">Poisson, S. D. (1837). <i>Recherches sur la probabilité des jugements en matière criminelle et en matière civile.</i> Paris: Bachelier.</p>
+      </li>
+      <li>
+        <p class="ref-topic">Peak picking and centroiding in open-source mass spectrometry software</p>
+        <p class="ref">Pfeuffer, J., Bielow, C., Wein, S., et al. (2024). OpenMS 3 enables reproducible analysis of large-scale mass spectrometry data. <i>Nature Methods</i> 21, 365–367.</p>
+      </li>
+    </ul>
   </section>
 <nav class="pager" aria-label="Lesson navigation">
 <a class="prev" href="detecting_peaks.html"><small>Previous lesson</small>Detecting peaks</a>
